@@ -10,214 +10,229 @@ body {
   font-family: system-ui;
   background: #020617;
   color: white;
+  display: flex;
+}
+
+main {
+  flex: 1;
+  padding: 20px;
 }
 
 header {
-  padding: 15px 25px;
   display: flex;
   justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-.card {
+.partido {
   background: #0f172a;
-  margin: 15px;
   padding: 15px;
   border-radius: 12px;
+  margin-bottom: 15px;
 }
 
-.pick {
-  margin: 6px 0;
+.titulo {
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-.pick input {
-  margin-right: 8px;
+.botones {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
-.parlay-box {
+.btn {
   background: #020617;
+  border: 1px solid #1e293b;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn.activo {
+  background: #22c55e;
+  color: black;
+  font-weight: bold;
+}
+
+/* BET SLIP */
+#betSlip {
+  width: 320px;
+  background: #020617;
+  border-left: 2px solid #1e293b;
+  padding: 15px;
+}
+
+.seleccion {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
   margin-top: 10px;
 }
-button {
+
+button.apostar {
+  margin-top: 10px;
   width: 100%;
   padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  background: #22c55e;
-  margin-top: 10px;
-}
-.estado {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
   background: #facc15;
-  color: black;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <strong>Braziño 🎰</strong>
-  <span id="saldo"></span>
-</header>
-
 <main>
+  <header>
+    <h2>Braziño 🏈</h2>
+    <span id="saldo"></span>
+  </header>
 
-<!-- PARTIDOS -->
-<div class="card">
-  <h3>Constructor de Parlay</h3>
-  <div id="picks"></div>
-
-  <div class="parlay-box">
-    <strong>Parlay actual:</strong>
-    <div id="parlayLista"></div>
-    <p>Cuota total: <strong>x<span id="cuotaTotal">1.00</span></strong></p>
-
-    <input id="monto" placeholder="Monto a apostar" style="width:100%;padding:8px">
-    <button onclick="crearParlay()">Crear Parlay</button>
-  </div>
-</div>
-
-<!-- APUESTAS -->
-<div class="card">
-  <h3>Mis apuestas</h3>
-  <div id="apuestas"></div>
-</div>
-
+  <div id="partidos"></div>
 </main>
+
+<!-- BET SLIP -->
+<aside id="betSlip">
+  <h3>Bet Slip</h3>
+  <div id="selecciones"></div>
+
+  <p id="tipoApuesta"></p>
+  <p>Cuota total: <strong id="cuota">0.00</strong></p>
+
+  <input type="number" id="monto" placeholder="Monto a apostar">
+  <button class="apostar" onclick="apostar()">Apostar</button>
+</aside>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
+
 const usuario = localStorage.getItem("usuario");
 const dinero = localStorage.getItem("dinero");
 
-if (!usuario) location.href = "index.html";
-document.getElementById("saldo").textContent = `💰 $${dinero}`;
+document.getElementById("saldo").textContent = "💰 $" + dinero;
 
-/* =====================
-   PARTIDOS DISPONIBLES
-===================== */
-const picksDisponibles = [
-  { texto: "Chiefs ML", cuota: 1.80 },
-  { texto: "Bills ML", cuota: 2.10 },
-  { texto: "Over 48.5 Chiefs vs Bills", cuota: 1.90 },
-  { texto: "Cowboys +4.5", cuota: 1.90 },
-  { texto: "Eagles ML", cuota: 1.70 }
+const partidos = [
+  {
+    id: 1,
+    local: "Chiefs",
+    visita: "Bills",
+    mlLocal: 1.85,
+    mlVisita: 2.05,
+    over: 48.5,
+    cuotaOver: 1.9,
+    cuotaUnder: 1.9,
+    spread: "-3.5",
+    cuotaSpread: 1.95
+  },
+  {
+    id: 2,
+    local: "49ers",
+    visita: "Eagles",
+    mlLocal: 1.75,
+    mlVisita: 2.15,
+    over: 46.5,
+    cuotaOver: 1.9,
+    cuotaUnder: 1.9,
+    spread: "-2.5",
+    cuotaSpread: 1.95
+  }
 ];
 
-const divPicks = document.getElementById("picks");
-const parlayLista = document.getElementById("parlayLista");
-const cuotaSpan = document.getElementById("cuotaTotal");
+const selecciones = [];
 
-let parlay = [];
+function render() {
+  const cont = document.getElementById("partidos");
+  cont.innerHTML = "";
 
-picksDisponibles.forEach((p, i) => {
-  divPicks.innerHTML += `
-    <div class="pick">
-      <input type="checkbox" onchange="togglePick(${i})">
-      ${p.texto} (x${p.cuota})
-    </div>
-  `;
-});
+  partidos.forEach(p => {
+    cont.innerHTML += `
+      <div class="partido">
+        <div class="titulo">${p.visita} @ ${p.local}</div>
 
-function togglePick(i) {
-  const pick = picksDisponibles[i];
-  const index = parlay.indexOf(pick);
+        <div class="botones">
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.local}',${p.mlLocal})">
+            ${p.local}<br>x${p.mlLocal}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.visita}',${p.mlVisita})">
+            ${p.visita}<br>x${p.mlVisita}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','Over ${p.over}',${p.cuotaOver})">
+            Over ${p.over}<br>x${p.cuotaOver}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','Under ${p.over}',${p.cuotaUnder})">
+            Under ${p.over}<br>x${p.cuotaUnder}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','Spread ${p.local} ${p.spread}',${p.cuotaSpread})">
+            Spread ${p.spread}<br>x${p.cuotaSpread}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function toggle(id, desc, cuota) {
+  const index = selecciones.findIndex(s => s.desc === desc);
 
   if (index >= 0) {
-    parlay.splice(index, 1);
+    selecciones.splice(index, 1);
   } else {
-    parlay.push(pick);
+    selecciones.push({ id, desc, cuota });
   }
-  renderParlay();
+
+  actualizarSlip();
 }
 
-function renderParlay() {
-  parlayLista.innerHTML = "";
+function actualizarSlip() {
+  const div = document.getElementById("selecciones");
+  div.innerHTML = "";
+
   let cuotaTotal = 1;
 
-  parlay.forEach(p => {
-    cuotaTotal *= p.cuota;
-    parlayLista.innerHTML += `<div>• ${p.texto} x${p.cuota}</div>`;
+  selecciones.forEach(s => {
+    cuotaTotal *= s.cuota;
+    div.innerHTML += `<div class="seleccion">${s.desc} x${s.cuota}</div>`;
   });
 
-  cuotaSpan.textContent = cuotaTotal.toFixed(2);
+  document.getElementById("cuota").textContent = cuotaTotal.toFixed(2);
+
+  document.getElementById("tipoApuesta").textContent =
+    selecciones.length > 1 ? "🧩 Parlay" : "🎯 Apuesta simple";
 }
 
-/* =====================
-   CREAR PARLAY
-===================== */
-function crearParlay() {
-  const monto = Number(document.getElementById("monto").value);
-  if (parlay.length < 2) {
-    alert("El parlay debe tener mínimo 2 selecciones");
-    return;
-  }
-  if (!monto || monto <= 0) {
-    alert("Monto inválido");
-    return;
-  }
+function apostar() {
+  if (!selecciones.length) return alert("Selecciona una apuesta");
 
-  const detalle = parlay.map(p => p.texto).join(" + ");
-  const cuota = Number(cuotaSpan.textContent);
+  const monto = document.getElementById("monto").value;
+  if (!monto || monto <= 0) return alert("Monto inválido");
 
   fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
-      action: "crearApuesta",
+      action: "apostar",
       usuario,
-      tipo: "Parlay",
-      detalle,
-      monto,
-      cuota
+      selecciones,
+      monto
     })
   })
   .then(r => r.json())
   .then(d => {
-    alert(d.message);
-    parlay = [];
-    document.getElementById("monto").value = "";
-    renderParlay();
-    cargarApuestas();
+    alert("Apuesta realizada 🎉");
+    location.reload();
   });
 }
 
-/* =====================
-   CARGAR APUESTAS
-===================== */
-function cargarApuestas() {
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "obtenerApuestas",
-      usuario
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
-    const div = document.getElementById("apuestas");
-    div.innerHTML = "";
-
-    d.apuestas.forEach(a => {
-      div.innerHTML += `
-        <div class="card">
-          <strong>${a.tipo}</strong><br>
-          ${a.detalle}<br>
-          💵 $${a.monto} | x${a.cuota}<br>
-          Posible: $${a.posible}<br>
-          <span class="estado">${a.estado}</span>
-        </div>
-      `;
-    });
-  });
-}
-
-cargarApuestas();
+render();
 </script>
 
 </body>
