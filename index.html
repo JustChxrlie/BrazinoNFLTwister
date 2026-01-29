@@ -23,11 +23,19 @@
     text-align: center;
   }
 
-  h2 { margin-bottom: 20px; }
+  h2 {
+    margin-bottom: 20px;
+  }
 
-  .field { margin-bottom: 15px; text-align: left; }
+  .field {
+    margin-bottom: 15px;
+    text-align: left;
+  }
 
-  label { font-size: 13px; color: #555; }
+  label {
+    font-size: 13px;
+    color: #555;
+  }
 
   input {
     width: 100%;
@@ -36,6 +44,11 @@
     border: 1px solid #ccc;
     margin-top: 5px;
     font-size: 15px;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #6366f1;
   }
 
   .buttons {
@@ -51,28 +64,48 @@
     border: none;
     cursor: pointer;
     font-size: 15px;
+    transition: .2s;
   }
 
-  .register { background: #22c55e; color: white; }
-  .login { background: #6366f1; color: white; }
+  .register {
+    background: #22c55e;
+    color: white;
+  }
 
-  #msg { margin-top: 15px; font-size: 14px; min-height: 20px; }
+  .register:hover {
+    background: #16a34a;
+  }
+
+  .login {
+    background: #6366f1;
+    color: white;
+  }
+
+  .login:hover {
+    background: #4f46e5;
+  }
+
+  #msg {
+    margin-top: 15px;
+    font-size: 14px;
+    min-height: 20px;
+  }
 </style>
 </head>
 
 <body>
 
 <div class="card">
-  <h2>Braziño 🎰</h2>
+  <h2>Braziño, La casa de apuestas de la ÑFL</h2>
 
   <div class="field">
     <label>Usuario</label>
-    <input id="user">
+    <input id="user" placeholder="Ingresa tu usuario">
   </div>
 
   <div class="field">
     <label>Password</label>
-    <input id="pass" type="password">
+    <input id="pass" type="password" placeholder="••••••">
   </div>
 
   <div class="buttons">
@@ -87,43 +120,65 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 const msg = document.getElementById("msg");
 
-function setMsg(text, color="#555") {
+function setMsg(text, color = "#555") {
   msg.textContent = text;
   msg.style.color = color;
 }
 
 function register() {
+  const usuario = user.value.trim();
+  const password = pass.value.trim();
+
+  if (!usuario || !password) {
+    setMsg("Completa todos los campos", "red");
+    return;
+  }
+
+  setMsg("Creando cuenta...");
+
   fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "register",
-      usuario: user.value.trim(),
-      password: pass.value.trim()
+      usuario,
+      password
     })
   })
   .then(r => r.json())
-  .then(d => setMsg(d.message, d.ok ? "green" : "red"));
+  .then(d => {
+    setMsg(d.message, d.ok ? "green" : "red");
+  })
+  .catch(() => setMsg("Error de conexión", "red"));
 }
 
 function login() {
+  const usuario = user.value.trim();
+  const password = pass.value.trim();
+
+  if (!usuario || !password) {
+    setMsg("Completa todos los campos", "red");
+    return;
+  }
+
+  setMsg("Verificando...");
+
   fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "login",
-      usuario: user.value.trim(),
-      password: pass.value.trim()
+      usuario,
+      password
     })
   })
   .then(r => r.json())
   .then(d => {
     if (d.ok) {
-      localStorage.setItem("usuario", d.usuario);
-      localStorage.setItem("dinero", d.dinero);
-      location.href = "dashboard.html";
+      setMsg(`Bienvenido ${d.usuario} 💰 $${d.dinero}`, "green");
     } else {
       setMsg(d.message, "red");
     }
-  });
+  })
+  .catch(() => setMsg("Error de conexión", "red"));
 }
 </script>
 
