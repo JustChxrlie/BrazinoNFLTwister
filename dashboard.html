@@ -13,6 +13,7 @@ body {
   display: flex;
 }
 
+/* ===== MAIN ===== */
 main {
   flex: 1;
   padding: 20px;
@@ -24,6 +25,7 @@ header {
   margin-bottom: 20px;
 }
 
+/* ===== PARTIDOS ===== */
 .partido {
   background: #0f172a;
   padding: 15px;
@@ -38,7 +40,7 @@ header {
 
 .botones {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 👈 2 por fila */
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
@@ -49,10 +51,7 @@ header {
   border-radius: 8px;
   cursor: pointer;
   text-align: center;
-}
-
-.btn:hover {
-  border-color: #facc15;
+  font-size: 14px;
 }
 
 .btn.activo {
@@ -61,7 +60,7 @@ header {
   font-weight: bold;
 }
 
-/* BET SLIP */
+/* ===== BET SLIP ===== */
 #betSlip {
   width: 320px;
   background: #020617;
@@ -90,6 +89,28 @@ button.apostar {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: bold;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+  body {
+    flex-direction: column;
+  }
+
+  main {
+    padding-bottom: 230px;
+  }
+
+  #betSlip {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    border-left: none;
+    border-top: 2px solid #1e293b;
+    z-index: 1000;
+  }
 }
 </style>
 </head>
@@ -105,14 +126,18 @@ button.apostar {
   <div id="partidos"></div>
 </main>
 
+<!-- BET SLIP -->
 <aside id="betSlip">
   <h3>Bet Slip</h3>
+
   <div id="selecciones"></div>
 
   <p id="tipoApuesta"></p>
   <p>Cuota total: <strong id="cuota">0.00</strong></p>
+  <p>Pago potencial: <strong id="pago">$0.00</strong></p>
+  <p>Ganancia: <strong id="ganancia">$0.00</strong></p>
 
-  <input type="number" id="monto" placeholder="Monto a apostar">
+  <input type="number" id="monto" placeholder="Monto a apostar" oninput="calcularGanancia()">
   <button class="apostar" onclick="apostar()">Apostar</button>
 </aside>
 
@@ -120,7 +145,11 @@ button.apostar {
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 
 const usuario = localStorage.getItem("usuario");
-document.getElementById("saldo").textContent = "💰 $" + localStorage.getItem("dinero");
+const dinero = localStorage.getItem("dinero");
+
+if (!usuario) location.href = "index.html";
+
+document.getElementById("saldo").textContent = "💰 $" + dinero;
 
 const partidos = [
   {
@@ -129,12 +158,12 @@ const partidos = [
     visita: "Bills",
     mlLocal: 1.85,
     mlVisita: 2.05,
-    total: 48.5,
+    over: 48.5,
     cuotaOver: 1.9,
     cuotaUnder: 1.9,
-    spread: 3.5,
-    cuotaSpreadLocal: 1.95,
-    cuotaSpreadVisita: 1.95
+    spreadL: "-3.5",
+    spreadV: "+3.5",
+    cuotaSpread: 1.95
   },
   {
     id: 2,
@@ -142,12 +171,12 @@ const partidos = [
     visita: "Eagles",
     mlLocal: 1.75,
     mlVisita: 2.15,
-    total: 46.5,
+    over: 46.5,
     cuotaOver: 1.9,
     cuotaUnder: 1.9,
-    spread: 2.5,
-    cuotaSpreadLocal: 1.95,
-    cuotaSpreadVisita: 1.95
+    spreadL: "-2.5",
+    spreadV: "+2.5",
+    cuotaSpread: 1.95
   }
 ];
 
@@ -163,28 +192,25 @@ function render() {
         <div class="titulo">${p.visita} @ ${p.local}</div>
 
         <div class="botones">
-          <!-- ML -->
-          <div class="btn" onclick="toggle('${p.id}','ML ${p.local}',${p.mlLocal},this)">
-            ${p.local}<br>x${p.mlLocal}
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.local}',${p.mlLocal})">
+            ML ${p.local}<br>x${p.mlLocal}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','ML ${p.visita}',${p.mlVisita},this)">
-            ${p.visita}<br>x${p.mlVisita}
-          </div>
-
-          <!-- O/U -->
-          <div class="btn" onclick="toggle('${p.id}','Over ${p.total}',${p.cuotaOver},this)">
-            Over ${p.total}<br>x${p.cuotaOver}
-          </div>
-          <div class="btn" onclick="toggle('${p.id}','Under ${p.total}',${p.cuotaUnder},this)">
-            Under ${p.total}<br>x${p.cuotaUnder}
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.visita}',${p.mlVisita})">
+            ML ${p.visita}<br>x${p.mlVisita}
           </div>
 
-          <!-- Spread -->
-          <div class="btn" onclick="toggle('${p.id}','${p.local} -${p.spread}',${p.cuotaSpreadLocal},this)">
-            ${p.local} -${p.spread}<br>x${p.cuotaSpreadLocal}
+          <div class="btn" onclick="toggle('${p.id}','Over ${p.over}',${p.cuotaOver})">
+            Over ${p.over}<br>x${p.cuotaOver}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','${p.visita} +${p.spread}',${p.cuotaSpreadVisita},this)">
-            ${p.visita} +${p.spread}<br>x${p.cuotaSpreadVisita}
+          <div class="btn" onclick="toggle('${p.id}','Under ${p.over}',${p.cuotaUnder})">
+            Under ${p.over}<br>x${p.cuotaUnder}
+          </div>
+
+          <div class="btn" onclick="toggle('${p.id}','${p.local} ${p.spreadL}',${p.cuotaSpread})">
+            ${p.local} ${p.spreadL}<br>x${p.cuotaSpread}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','${p.visita} ${p.spreadV}',${p.cuotaSpread})">
+            ${p.visita} ${p.spreadV}<br>x${p.cuotaSpread}
           </div>
         </div>
       </div>
@@ -192,15 +218,13 @@ function render() {
   });
 }
 
-function toggle(id, desc, cuota, btn) {
-  const i = selecciones.findIndex(s => s.desc === desc);
+function toggle(id, desc, cuota) {
+  const index = selecciones.findIndex(s => s.desc === desc);
 
-  if (i >= 0) {
-    selecciones.splice(i, 1);
-    btn.classList.remove("activo");
+  if (index >= 0) {
+    selecciones.splice(index, 1);
   } else {
     selecciones.push({ id, desc, cuota });
-    btn.classList.add("activo");
   }
 
   actualizarSlip();
@@ -209,6 +233,7 @@ function toggle(id, desc, cuota, btn) {
 function actualizarSlip() {
   const div = document.getElementById("selecciones");
   div.innerHTML = "";
+
   let cuotaTotal = 1;
 
   selecciones.forEach(s => {
@@ -219,28 +244,34 @@ function actualizarSlip() {
   document.getElementById("cuota").textContent = cuotaTotal.toFixed(2);
   document.getElementById("tipoApuesta").textContent =
     selecciones.length > 1 ? "🧩 Parlay" : "🎯 Apuesta simple";
+
+  calcularGanancia();
+}
+
+function calcularGanancia() {
+  const monto = Number(document.getElementById("monto").value);
+  const cuota = Number(document.getElementById("cuota").textContent);
+
+  if (!monto || monto <= 0) {
+    document.getElementById("pago").textContent = "$0.00";
+    document.getElementById("ganancia").textContent = "$0.00";
+    return;
+  }
+
+  const pago = monto * cuota;
+  const ganancia = pago - monto;
+
+  document.getElementById("pago").textContent = "$" + pago.toFixed(2);
+  document.getElementById("ganancia").textContent = "$" + ganancia.toFixed(2);
 }
 
 function apostar() {
   if (!selecciones.length) return alert("Selecciona una apuesta");
-
   const monto = document.getElementById("monto").value;
   if (!monto || monto <= 0) return alert("Monto inválido");
 
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "apostar",
-      usuario,
-      selecciones,
-      monto
-    })
-  })
-  .then(r => r.json())
-  .then(() => {
-    alert("Apuesta realizada 🎉");
-    location.reload();
-  });
+  alert("Apuesta realizada 🎉 (simulado)");
+  location.reload();
 }
 
 render();
