@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Braziño – Página Principal</title>
+<title>Braziño – Dashboard</title>
 
 <style>
 body {
@@ -13,15 +13,10 @@ body {
 }
 
 header {
-  background: #020617;
   padding: 15px 25px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-h1 {
-  font-size: 20px;
 }
 
 .card {
@@ -29,17 +24,6 @@ h1 {
   margin: 15px;
   padding: 15px;
   border-radius: 12px;
-}
-
-.estado {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-
-.abierta {
-  background: #facc15;
-  color: black;
 }
 
 .partido {
@@ -51,19 +35,26 @@ h1 {
   border-bottom: none;
 }
 
-.partido button {
-  margin-top: 8px;
-  padding: 8px;
+.opciones button {
+  margin-top: 6px;
   width: 100%;
+  padding: 8px;
   border-radius: 8px;
   border: none;
-  background: #22c55e;
-  font-weight: bold;
   cursor: pointer;
+  font-weight: bold;
 }
 
-.partido button:hover {
-  background: #16a34a;
+.moneyline { background: #22c55e; }
+.ou { background: #38bdf8; }
+.spread { background: #facc15; color:black; }
+
+.estado {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #facc15;
+  color: black;
 }
 </style>
 </head>
@@ -71,63 +62,102 @@ h1 {
 <body>
 
 <header>
-  <h1>Braziño, La casa de apuestas de la ÑFL 🎰</h1>
+  <strong>Braziño 🎰</strong>
   <span id="saldo"></span>
 </header>
 
 <main>
 
-  <!-- PARTIDOS -->
-  <div class="card">
-    <h3>Partidos NFL – Semanas 11 a 18 (2025-26)</h3>
-    <div id="partidos"></div>
-  </div>
+<!-- PARTIDOS -->
+<div class="card">
+  <h3>Partidos NFL (Semanas 11–18)</h3>
+  <div id="partidos"></div>
+</div>
 
-  <!-- APUESTAS -->
-  <div class="card">
-    <h3>Mis apuestas</h3>
-    <div id="apuestas"></div>
-  </div>
+<!-- APUESTAS -->
+<div class="card">
+  <h3>Mis apuestas</h3>
+  <div id="apuestas"></div>
+</div>
 
 </main>
 
 <script>
-/* =====================
-   CONFIG
-===================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 const usuario = localStorage.getItem("usuario");
 const dinero = localStorage.getItem("dinero");
 
 if (!usuario) location.href = "index.html";
-
 document.getElementById("saldo").textContent = `💰 $${dinero}`;
 
 /* =====================
-   PARTIDOS (MOCK)
+   PARTIDOS (MOCK REAL)
 ===================== */
-const partidosNFL = [
-  { semana: 11, juego: "Chiefs vs Bills", cuota: 1.90 },
-  { semana: 12, juego: "Cowboys vs Eagles", cuota: 2.10 },
-  { semana: 13, juego: "49ers vs Seahawks", cuota: 1.85 },
-  { semana: 14, juego: "Packers vs Lions", cuota: 1.95 },
-  { semana: 15, juego: "Ravens vs Bengals", cuota: 2.00 },
-  { semana: 16, juego: "Jets vs Dolphins", cuota: 2.20 },
-  { semana: 17, juego: "Chargers vs Raiders", cuota: 1.90 },
-  { semana: 18, juego: "Vikings vs Bears", cuota: 1.80 }
+const partidos = [
+  {
+    semana: 11,
+    local: "Chiefs",
+    visita: "Bills",
+    mlLocal: 1.80,
+    mlVisita: 2.10,
+    total: 48.5,
+    over: 1.90,
+    under: 1.90,
+    spreadLocal: -3.5,
+    spreadCuota: 1.95
+  },
+  {
+    semana: 12,
+    local: "Cowboys",
+    visita: "Eagles",
+    mlLocal: 2.20,
+    mlVisita: 1.70,
+    total: 46.5,
+    over: 1.85,
+    under: 1.95,
+    spreadLocal: +4.5,
+    spreadCuota: 1.90
+  }
 ];
 
-const partidosDiv = document.getElementById("partidos");
+const divPartidos = document.getElementById("partidos");
 
-partidosNFL.forEach(p => {
-  partidosDiv.innerHTML += `
+partidos.forEach(p => {
+  divPartidos.innerHTML += `
     <div class="partido">
       <strong>Semana ${p.semana}</strong><br>
-      ${p.juego}<br>
-      Cuota: x${p.cuota}
-      <button onclick="apostar('${p.juego}', ${p.cuota})">
-        Apostar
-      </button>
+      ${p.local} vs ${p.visita}
+
+      <div class="opciones">
+        <button class="moneyline"
+          onclick="apostar('Moneyline', '${p.local}', ${p.mlLocal})">
+          ${p.local} x${p.mlLocal}
+        </button>
+
+        <button class="moneyline"
+          onclick="apostar('Moneyline', '${p.visita}', ${p.mlVisita})">
+          ${p.visita} x${p.mlVisita}
+        </button>
+
+        <button class="ou"
+          onclick="apostar('Over', 'Over ${p.total}', ${p.over})">
+          Over ${p.total} x${p.over}
+        </button>
+
+        <button class="ou"
+          onclick="apostar('Under', 'Under ${p.total}', ${p.under})">
+          Under ${p.total} x${p.under}
+        </button>
+
+        <button class="spread"
+          onclick="apostar(
+            'Spread',
+            '${p.local} ${p.spreadLocal}',
+            ${p.spreadCuota}
+          )">
+          ${p.local} ${p.spreadLocal} x${p.spreadCuota}
+        </button>
+      </div>
     </div>
   `;
 });
@@ -135,8 +165,8 @@ partidosNFL.forEach(p => {
 /* =====================
    CREAR APUESTA
 ===================== */
-function apostar(juego, cuota) {
-  const monto = prompt(`¿Cuánto deseas apostar?\n${juego} (x${cuota})`);
+function apostar(tipo, detalle, cuota) {
+  const monto = prompt(`Apuesta:\n${detalle}\nCuota x${cuota}\n\nMonto:`);
 
   if (!monto || isNaN(monto) || monto <= 0) {
     alert("Monto inválido");
@@ -148,8 +178,8 @@ function apostar(juego, cuota) {
     body: JSON.stringify({
       action: "crearApuesta",
       usuario,
-      tipo: "Straight",
-      detalle: juego,
+      tipo,
+      detalle,
       monto: Number(monto),
       cuota
     })
@@ -189,8 +219,8 @@ function cargarApuestas() {
           <strong>${a.tipo}</strong><br>
           ${a.detalle}<br>
           💵 $${a.monto} | x${a.cuota}<br>
-          Ganancia posible: $${a.posible}<br>
-          <span class="estado abierta">${a.estado}</span>
+          Posible: $${a.posible}<br>
+          <span class="estado">${a.estado}</span>
         </div>
       `;
     });
