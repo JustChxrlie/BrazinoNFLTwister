@@ -38,7 +38,7 @@ header {
 
 .botones {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* 👈 2 por fila */
   gap: 10px;
 }
 
@@ -49,6 +49,10 @@ header {
   border-radius: 8px;
   cursor: pointer;
   text-align: center;
+}
+
+.btn:hover {
+  border-color: #facc15;
 }
 
 .btn.activo {
@@ -101,7 +105,6 @@ button.apostar {
   <div id="partidos"></div>
 </main>
 
-<!-- BET SLIP -->
 <aside id="betSlip">
   <h3>Bet Slip</h3>
   <div id="selecciones"></div>
@@ -117,9 +120,7 @@ button.apostar {
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 
 const usuario = localStorage.getItem("usuario");
-const dinero = localStorage.getItem("dinero");
-
-document.getElementById("saldo").textContent = "💰 $" + dinero;
+document.getElementById("saldo").textContent = "💰 $" + localStorage.getItem("dinero");
 
 const partidos = [
   {
@@ -128,11 +129,12 @@ const partidos = [
     visita: "Bills",
     mlLocal: 1.85,
     mlVisita: 2.05,
-    over: 48.5,
+    total: 48.5,
     cuotaOver: 1.9,
     cuotaUnder: 1.9,
-    spread: "-3.5",
-    cuotaSpread: 1.95
+    spread: 3.5,
+    cuotaSpreadLocal: 1.95,
+    cuotaSpreadVisita: 1.95
   },
   {
     id: 2,
@@ -140,12 +142,12 @@ const partidos = [
     visita: "Eagles",
     mlLocal: 1.75,
     mlVisita: 2.15,
-    over: 46.5,
+    total: 46.5,
     cuotaOver: 1.9,
     cuotaUnder: 1.9,
-    spreadL: "-2.5",
-    spreadV: "+2.5",
-    cuotaSpread: 1.95
+    spread: 2.5,
+    cuotaSpreadLocal: 1.95,
+    cuotaSpreadVisita: 1.95
   }
 ];
 
@@ -161,23 +163,28 @@ function render() {
         <div class="titulo">${p.visita} @ ${p.local}</div>
 
         <div class="botones">
-          <div class="btn" onclick="toggle('${p.id}','ML ${p.local}',${p.mlLocal})">
+          <!-- ML -->
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.local}',${p.mlLocal},this)">
             ${p.local}<br>x${p.mlLocal}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','ML ${p.visita}',${p.mlVisita})">
+          <div class="btn" onclick="toggle('${p.id}','ML ${p.visita}',${p.mlVisita},this)">
             ${p.visita}<br>x${p.mlVisita}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','Over ${p.over}',${p.cuotaOver})">
-            Over ${p.over}<br>x${p.cuotaOver}
+
+          <!-- O/U -->
+          <div class="btn" onclick="toggle('${p.id}','Over ${p.total}',${p.cuotaOver},this)">
+            Over ${p.total}<br>x${p.cuotaOver}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','Under ${p.over}',${p.cuotaUnder})">
-            Under ${p.over}<br>x${p.cuotaUnder}
+          <div class="btn" onclick="toggle('${p.id}','Under ${p.total}',${p.cuotaUnder},this)">
+            Under ${p.total}<br>x${p.cuotaUnder}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','Local ${p.local} ${p.spreadL}',${p.cuotaSpread})">
-            Spread ${p.spread}<br>x${p.cuotaSpread}
+
+          <!-- Spread -->
+          <div class="btn" onclick="toggle('${p.id}','${p.local} -${p.spread}',${p.cuotaSpreadLocal},this)">
+            ${p.local} -${p.spread}<br>x${p.cuotaSpreadLocal}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','Visitante ${p.local} ${p.spreadV}',${p.cuotaSpread})">
-            Spread ${p.spread}<br>x${p.cuotaSpread}
+          <div class="btn" onclick="toggle('${p.id}','${p.visita} +${p.spread}',${p.cuotaSpreadVisita},this)">
+            ${p.visita} +${p.spread}<br>x${p.cuotaSpreadVisita}
           </div>
         </div>
       </div>
@@ -185,13 +192,15 @@ function render() {
   });
 }
 
-function toggle(id, desc, cuota) {
-  const index = selecciones.findIndex(s => s.desc === desc);
+function toggle(id, desc, cuota, btn) {
+  const i = selecciones.findIndex(s => s.desc === desc);
 
-  if (index >= 0) {
-    selecciones.splice(index, 1);
+  if (i >= 0) {
+    selecciones.splice(i, 1);
+    btn.classList.remove("activo");
   } else {
     selecciones.push({ id, desc, cuota });
+    btn.classList.add("activo");
   }
 
   actualizarSlip();
@@ -200,7 +209,6 @@ function toggle(id, desc, cuota) {
 function actualizarSlip() {
   const div = document.getElementById("selecciones");
   div.innerHTML = "";
-
   let cuotaTotal = 1;
 
   selecciones.forEach(s => {
@@ -209,7 +217,6 @@ function actualizarSlip() {
   });
 
   document.getElementById("cuota").textContent = cuotaTotal.toFixed(2);
-
   document.getElementById("tipoApuesta").textContent =
     selecciones.length > 1 ? "🧩 Parlay" : "🎯 Apuesta simple";
 }
@@ -230,7 +237,7 @@ function apostar() {
     })
   })
   .then(r => r.json())
-  .then(d => {
+  .then(() => {
     alert("Apuesta realizada 🎉");
     location.reload();
   });
@@ -238,9 +245,6 @@ function apostar() {
 
 render();
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
