@@ -173,7 +173,12 @@ function login() {
   .then(r => r.json())
   .then(d => {
     if (d.ok) {
-      setMsg(`Bienvenido ${d.usuario} 💰 $${d.dinero}`, "green");
+  localStorage.setItem("usuario", d.usuario);
+  localStorage.setItem("dinero", d.dinero);
+
+  window.location.href = "dashboard.html";
+}
+
     } else {
       setMsg(d.message, "red");
     }
