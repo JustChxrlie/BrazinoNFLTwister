@@ -143,7 +143,8 @@ const partidos = [
     over: 46.5,
     cuotaOver: 1.9,
     cuotaUnder: 1.9,
-    spread: "-2.5",
+    spreadL: "-2.5",
+    spreadV: "+2.5",
     cuotaSpread: 1.95
   }
 ];
@@ -172,7 +173,10 @@ function render() {
           <div class="btn" onclick="toggle('${p.id}','Under ${p.over}',${p.cuotaUnder})">
             Under ${p.over}<br>x${p.cuotaUnder}
           </div>
-          <div class="btn" onclick="toggle('${p.id}','Spread ${p.local} ${p.spread}',${p.cuotaSpread})">
+          <div class="btn" onclick="toggle('${p.id}','Local ${p.local} ${p.spreadL}',${p.cuotaSpread})">
+            Spread ${p.spread}<br>x${p.cuotaSpread}
+          </div>
+          <div class="btn" onclick="toggle('${p.id}','Visitante ${p.local} ${p.spreadV}',${p.cuotaSpread})">
             Spread ${p.spread}<br>x${p.cuotaSpread}
           </div>
         </div>
