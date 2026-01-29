@@ -23,11 +23,19 @@
     text-align: center;
   }
 
-  h2 { margin-bottom: 20px; }
+  h2 {
+    margin-bottom: 20px;
+  }
 
-  .field { margin-bottom: 15px; text-align: left; }
+  .field {
+    margin-bottom: 15px;
+    text-align: left;
+  }
 
-  label { font-size: 13px; color: #555; }
+  label {
+    font-size: 13px;
+    color: #555;
+  }
 
   input {
     width: 100%;
@@ -59,11 +67,23 @@
     transition: .2s;
   }
 
-  .register { background: #22c55e; color: white; }
-  .register:hover { background: #16a34a; }
+  .register {
+    background: #22c55e;
+    color: white;
+  }
 
-  .login { background: #6366f1; color: white; }
-  .login:hover { background: #4f46e5; }
+  .register:hover {
+    background: #16a34a;
+  }
+
+  .login {
+    background: #6366f1;
+    color: white;
+  }
+
+  .login:hover {
+    background: #4f46e5;
+  }
 
   #msg {
     margin-top: 15px;
@@ -76,7 +96,7 @@
 <body>
 
 <div class="card">
-  <h2>Braziño, la casa de apuestas de la ÑFL</h2>
+  <h2>Acceso</h2>
 
   <div class="field">
     <label>Usuario</label>
@@ -106,7 +126,7 @@ function setMsg(text, color = "#555") {
 }
 
 function register() {
-  const usuario = user.value.trim().toLowerCase();
+  const usuario = user.value.trim();
   const password = pass.value.trim();
 
   if (!usuario || !password) {
@@ -118,7 +138,6 @@ function register() {
 
   fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "register",
       usuario,
@@ -126,12 +145,14 @@ function register() {
     })
   })
   .then(r => r.json())
-  .then(d => setMsg(d.message, d.ok ? "green" : "red"))
+  .then(d => {
+    setMsg(d.message, d.ok ? "green" : "red");
+  })
   .catch(() => setMsg("Error de conexión", "red"));
 }
 
 function login() {
-  const usuario = user.value.trim().toLowerCase();
+  const usuario = user.value.trim();
   const password = pass.value.trim();
 
   if (!usuario || !password) {
@@ -143,7 +164,6 @@ function login() {
 
   fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "login",
       usuario,
@@ -154,7 +174,6 @@ function login() {
   .then(d => {
     if (d.ok) {
       setMsg(`Bienvenido ${d.usuario} 💰 $${d.dinero}`, "green");
-      // aquí luego redirigimos al dashboard
     } else {
       setMsg(d.message, "red");
     }
