@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Braziño – Dashboard</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: #020617;
+  color: white;
+}
+
+header {
+  background: #020617;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.card {
+  background: #0f172a;
+  margin: 15px;
+  padding: 15px;
+  border-radius: 12px;
+}
+.estado {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.abierta { background: #facc15; color: black; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>Braziño 🎰</strong>
+  <span id="saldo"></span>
+</header>
+
+<main id="lista"></main>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
+const usuario = localStorage.getItem("usuario");
+
+if (!usuario) location.href = "index.html";
+
+document.getElementById("saldo").textContent =
+  "💰 $" + localStorage.getItem("dinero");
+
+fetch(API_URL, {
+  method: "POST",
+  body: JSON.stringify({
+    action: "obtenerApuestas",
+    usuario
+  })
+})
+.then(r => r.json())
+.then(d => {
+  const lista = document.getElementById("lista");
+  if (!d.apuestas.length) {
+    lista.innerHTML = "<p style='padding:15px'>No tienes apuestas aún</p>";
+    return;
+  }
+
+  d.apuestas.forEach(a => {
+    lista.innerHTML += `
+      <div class="card">
+        <strong>${a.tipo}</strong><br>
+        ${a.detalle}<br>
+        💵 $${a.monto} | x${a.cuota}<br>
+        <span class="estado abierta">${a.estado}</span>
+      </div>
+    `;
+  });
+});
+</script>
+
+</body>
+</html>
