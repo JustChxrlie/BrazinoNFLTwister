@@ -16,7 +16,6 @@ header {
   padding: 15px 25px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .card {
@@ -26,29 +25,30 @@ header {
   border-radius: 12px;
 }
 
-.partido {
-  border-bottom: 1px solid #1e293b;
-  padding: 10px 0;
+.pick {
+  margin: 6px 0;
 }
 
-.partido:last-child {
-  border-bottom: none;
+.pick input {
+  margin-right: 8px;
 }
 
-.opciones button {
-  margin-top: 6px;
+.parlay-box {
+  background: #020617;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+button {
   width: 100%;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 10px;
   border: none;
-  cursor: pointer;
   font-weight: bold;
+  cursor: pointer;
+  background: #22c55e;
+  margin-top: 10px;
 }
-
-.moneyline { background: #22c55e; }
-.ou { background: #38bdf8; }
-.spread { background: #facc15; color:black; }
-
 .estado {
   font-size: 12px;
   padding: 4px 10px;
@@ -70,8 +70,17 @@ header {
 
 <!-- PARTIDOS -->
 <div class="card">
-  <h3>Partidos NFL (Semanas 11–18)</h3>
-  <div id="partidos"></div>
+  <h3>Constructor de Parlay</h3>
+  <div id="picks"></div>
+
+  <div class="parlay-box">
+    <strong>Parlay actual:</strong>
+    <div id="parlayLista"></div>
+    <p>Cuota total: <strong>x<span id="cuotaTotal">1.00</span></strong></p>
+
+    <input id="monto" placeholder="Monto a apostar" style="width:100%;padding:8px">
+    <button onclick="crearParlay()">Crear Parlay</button>
+  </div>
 </div>
 
 <!-- APUESTAS -->
@@ -91,105 +100,91 @@ if (!usuario) location.href = "index.html";
 document.getElementById("saldo").textContent = `💰 $${dinero}`;
 
 /* =====================
-   PARTIDOS (MOCK REAL)
+   PARTIDOS DISPONIBLES
 ===================== */
-const partidos = [
-  {
-    semana: 11,
-    local: "Chiefs",
-    visita: "Bills",
-    mlLocal: 1.80,
-    mlVisita: 2.10,
-    total: 48.5,
-    over: 1.90,
-    under: 1.90,
-    spreadLocal: -3.5,
-    spreadCuota: 1.95
-  },
-  {
-    semana: 12,
-    local: "Cowboys",
-    visita: "Eagles",
-    mlLocal: 2.20,
-    mlVisita: 1.70,
-    total: 46.5,
-    over: 1.85,
-    under: 1.95,
-    spreadLocal: +4.5,
-    spreadCuota: 1.90
-  }
+const picksDisponibles = [
+  { texto: "Chiefs ML", cuota: 1.80 },
+  { texto: "Bills ML", cuota: 2.10 },
+  { texto: "Over 48.5 Chiefs vs Bills", cuota: 1.90 },
+  { texto: "Cowboys +4.5", cuota: 1.90 },
+  { texto: "Eagles ML", cuota: 1.70 }
 ];
 
-const divPartidos = document.getElementById("partidos");
+const divPicks = document.getElementById("picks");
+const parlayLista = document.getElementById("parlayLista");
+const cuotaSpan = document.getElementById("cuotaTotal");
 
-partidos.forEach(p => {
-  divPartidos.innerHTML += `
-    <div class="partido">
-      <strong>Semana ${p.semana}</strong><br>
-      ${p.local} vs ${p.visita}
+let parlay = [];
 
-      <div class="opciones">
-        <button class="moneyline"
-          onclick="apostar('Moneyline', '${p.local}', ${p.mlLocal})">
-          ${p.local} x${p.mlLocal}
-        </button>
-
-        <button class="moneyline"
-          onclick="apostar('Moneyline', '${p.visita}', ${p.mlVisita})">
-          ${p.visita} x${p.mlVisita}
-        </button>
-
-        <button class="ou"
-          onclick="apostar('Over', 'Over ${p.total}', ${p.over})">
-          Over ${p.total} x${p.over}
-        </button>
-
-        <button class="ou"
-          onclick="apostar('Under', 'Under ${p.total}', ${p.under})">
-          Under ${p.total} x${p.under}
-        </button>
-
-        <button class="spread"
-          onclick="apostar(
-            'Spread',
-            '${p.local} ${p.spreadLocal}',
-            ${p.spreadCuota}
-          )">
-          ${p.local} ${p.spreadLocal} x${p.spreadCuota}
-        </button>
-      </div>
+picksDisponibles.forEach((p, i) => {
+  divPicks.innerHTML += `
+    <div class="pick">
+      <input type="checkbox" onchange="togglePick(${i})">
+      ${p.texto} (x${p.cuota})
     </div>
   `;
 });
 
-/* =====================
-   CREAR APUESTA
-===================== */
-function apostar(tipo, detalle, cuota) {
-  const monto = prompt(`Apuesta:\n${detalle}\nCuota x${cuota}\n\nMonto:`);
+function togglePick(i) {
+  const pick = picksDisponibles[i];
+  const index = parlay.indexOf(pick);
 
-  if (!monto || isNaN(monto) || monto <= 0) {
+  if (index >= 0) {
+    parlay.splice(index, 1);
+  } else {
+    parlay.push(pick);
+  }
+  renderParlay();
+}
+
+function renderParlay() {
+  parlayLista.innerHTML = "";
+  let cuotaTotal = 1;
+
+  parlay.forEach(p => {
+    cuotaTotal *= p.cuota;
+    parlayLista.innerHTML += `<div>• ${p.texto} x${p.cuota}</div>`;
+  });
+
+  cuotaSpan.textContent = cuotaTotal.toFixed(2);
+}
+
+/* =====================
+   CREAR PARLAY
+===================== */
+function crearParlay() {
+  const monto = Number(document.getElementById("monto").value);
+  if (parlay.length < 2) {
+    alert("El parlay debe tener mínimo 2 selecciones");
+    return;
+  }
+  if (!monto || monto <= 0) {
     alert("Monto inválido");
     return;
   }
+
+  const detalle = parlay.map(p => p.texto).join(" + ");
+  const cuota = Number(cuotaSpan.textContent);
 
   fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "crearApuesta",
       usuario,
-      tipo,
+      tipo: "Parlay",
       detalle,
-      monto: Number(monto),
+      monto,
       cuota
     })
   })
   .then(r => r.json())
   .then(d => {
     alert(d.message);
+    parlay = [];
+    document.getElementById("monto").value = "";
+    renderParlay();
     cargarApuestas();
-  })
-  .catch(() => alert("Error de conexión"));
+  });
 }
 
 /* =====================
@@ -208,11 +203,6 @@ function cargarApuestas() {
     const div = document.getElementById("apuestas");
     div.innerHTML = "";
 
-    if (!d.apuestas || !d.apuestas.length) {
-      div.innerHTML = "<p>No tienes apuestas aún</p>";
-      return;
-    }
-
     d.apuestas.forEach(a => {
       div.innerHTML += `
         <div class="card">
@@ -229,6 +219,9 @@ function cargarApuestas() {
 
 cargarApuestas();
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
