@@ -13,10 +13,7 @@ body {
   display: flex;
 }
 
-main {
-  flex: 1;
-  padding: 20px;
-}
+main { flex: 1; padding: 20px; }
 
 header {
   display: flex;
@@ -31,10 +28,7 @@ header {
   margin-bottom: 15px;
 }
 
-.titulo {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
+.titulo { font-weight: bold; margin-bottom: 10px; }
 
 .botones {
   display: grid;
@@ -64,10 +58,7 @@ header {
   padding: 15px;
 }
 
-.seleccion {
-  font-size: 14px;
-  margin-bottom: 6px;
-}
+.seleccion { font-size: 14px; margin-bottom: 6px; }
 
 input {
   width: 100%;
@@ -110,44 +101,39 @@ button.apostar {
     <h2>Braziño 🏈</h2>
     <span id="saldo"></span>
   </header>
-
   <div id="partidos"></div>
 </main>
 
 <aside id="betSlip">
   <h3>Bet Slip</h3>
-
   <div id="selecciones"></div>
-
   <p id="tipoApuesta"></p>
   <p>Cuota total: <strong id="cuota">1.00</strong></p>
   <p>Pago potencial: <strong id="pago">$0.00</strong></p>
-
   <input type="number" id="monto" placeholder="Monto a apostar" oninput="calcular()">
   <button class="apostar" onclick="apostar()">Apostar</button>
 </aside>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
+const API_URL = "TU_URL_DEL_SCRIPT";
 
-let usuario = localStorage.getItem("usuario");
+const usuario = localStorage.getItem("usuario");
 let saldo = Number(localStorage.getItem("dinero")) || 1000;
 
 document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
 
 const partidos = [
-  { id: 1, juego: "Bills @ Chiefs", opciones: [
-    { key:"ml1", texto:"ML Chiefs", cuota:1.85 },
-    { key:"ml2", texto:"ML Bills", cuota:2.05 },
-    { key:"o", texto:"Over 48.5", cuota:1.9 },
-    { key:"u", texto:"Under 48.5", cuota:1.9 }
-  ]},
-  { id: 2, juego: "Eagles @ 49ers", opciones: [
-    { key:"ml1", texto:"ML 49ers", cuota:1.75 },
-    { key:"ml2", texto:"ML Eagles", cuota:2.15 },
-    { key:"o", texto:"Over 46.5", cuota:1.9 },
-    { key:"u", texto:"Under 46.5", cuota:1.9 }
-  ]}
+  {
+    id: 1, juego: "Bills @ Chiefs",
+    opciones: [
+      {k:"mlc", t:"ML Chiefs", c:1.85},
+      {k:"mlb", t:"ML Bills", c:2.05},
+      {k:"ov", t:"Over 48.5", c:1.9},
+      {k:"un", t:"Under 48.5", c:1.9},
+      {k:"sc", t:"Chiefs -3.5", c:1.95},
+      {k:"sb", t:"Bills +3.5", c:1.95}
+    ]
+  }
 ];
 
 let selecciones = [];
@@ -155,52 +141,44 @@ let selecciones = [];
 function render() {
   const cont = document.getElementById("partidos");
   cont.innerHTML = "";
-
   partidos.forEach(p => {
     cont.innerHTML += `
       <div class="partido">
         <div class="titulo">${p.juego}</div>
         <div class="botones">
           ${p.opciones.map(o => `
-            <div class="btn" 
-              onclick="toggle(${p.id},'${o.key}','${p.juego}','${o.texto}',${o.cuota},this)">
-              ${o.texto}<br>x${o.cuota}
-            </div>
-          `).join("")}
+            <div class="btn"
+              onclick="toggle(${p.id},'${o.k}','${p.juego}','${o.t}',${o.c},this)">
+              ${o.t}<br>x${o.c}
+            </div>`).join("")}
         </div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
-function toggle(partido, key, juego, texto, cuota, el) {
-  const i = selecciones.findIndex(s => s.partido===partido && s.key===key);
-
+function toggle(pid, key, juego, texto, cuota, el) {
+  const i = selecciones.findIndex(s => s.pid===pid && s.key===key);
   if (i >= 0) {
     selecciones.splice(i,1);
     el.classList.remove("activo");
   } else {
-    selecciones.push({ partido, key, juego, texto, cuota });
+    selecciones.push({pid,key,juego,texto,cuota});
     el.classList.add("activo");
   }
-
   actualizar();
 }
 
 function actualizar() {
   const div = document.getElementById("selecciones");
   div.innerHTML = "";
-
-  let cuotaTotal = 1;
+  let cuota = 1;
   selecciones.forEach(s => {
-    cuotaTotal *= s.cuota;
+    cuota *= s.cuota;
     div.innerHTML += `<div class="seleccion">${s.texto} (${s.juego})</div>`;
   });
-
-  document.getElementById("cuota").textContent = cuotaTotal.toFixed(2);
+  document.getElementById("cuota").textContent = cuota.toFixed(2);
   document.getElementById("tipoApuesta").textContent =
     selecciones.length > 1 ? "🧩 Parlay" : "🎯 Simple";
-
   calcular();
 }
 
@@ -222,9 +200,12 @@ function apostar() {
 
   fetch(API_URL, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       usuario,
       monto,
+      saldo,
+      tipo: selecciones.length > 1 ? "Parlay" : "Simple",
       selecciones
     })
   });
