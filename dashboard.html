@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Braziño – Pagina Principal</title>
+<title>Braziño – Página Principal</title>
 
 <style>
 body {
@@ -17,6 +17,11 @@ header {
   padding: 15px 25px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  font-size: 20px;
 }
 
 .card {
@@ -25,59 +30,174 @@ header {
   padding: 15px;
   border-radius: 12px;
 }
+
 .estado {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
 }
-.abierta { background: #facc15; color: black; }
+
+.abierta {
+  background: #facc15;
+  color: black;
+}
+
+.partido {
+  border-bottom: 1px solid #1e293b;
+  padding: 10px 0;
+}
+
+.partido:last-child {
+  border-bottom: none;
+}
+
+.partido button {
+  margin-top: 8px;
+  padding: 8px;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+  background: #22c55e;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.partido button:hover {
+  background: #16a34a;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>Braziño, La casa de apuestas de la ÑFL</h1>
+  <h1>Braziño, La casa de apuestas de la ÑFL 🎰</h1>
   <span id="saldo"></span>
 </header>
 
-<main id="lista"></main>
+<main>
+
+  <!-- PARTIDOS -->
+  <div class="card">
+    <h3>Partidos NFL – Semanas 11 a 18 (2025-26)</h3>
+    <div id="partidos"></div>
+  </div>
+
+  <!-- APUESTAS -->
+  <div class="card">
+    <h3>Mis apuestas</h3>
+    <div id="apuestas"></div>
+  </div>
+
+</main>
 
 <script>
+/* =====================
+   CONFIG
+===================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 const usuario = localStorage.getItem("usuario");
+const dinero = localStorage.getItem("dinero");
 
 if (!usuario) location.href = "index.html";
 
-document.getElementById("saldo").textContent =
-  "💰 $" + localStorage.getItem("dinero");
+document.getElementById("saldo").textContent = `💰 $${dinero}`;
 
-fetch(API_URL, {
-  method: "POST",
-  body: JSON.stringify({
-    action: "obtenerApuestas",
-    usuario
-  })
-})
-.then(r => r.json())
-.then(d => {
-  const lista = document.getElementById("lista");
-  if (!d.apuestas.length) {
-    lista.innerHTML = "<p style='padding:15px'>No tienes apuestas aún</p>";
+/* =====================
+   PARTIDOS (MOCK)
+===================== */
+const partidosNFL = [
+  { semana: 11, juego: "Chiefs vs Bills", cuota: 1.90 },
+  { semana: 12, juego: "Cowboys vs Eagles", cuota: 2.10 },
+  { semana: 13, juego: "49ers vs Seahawks", cuota: 1.85 },
+  { semana: 14, juego: "Packers vs Lions", cuota: 1.95 },
+  { semana: 15, juego: "Ravens vs Bengals", cuota: 2.00 },
+  { semana: 16, juego: "Jets vs Dolphins", cuota: 2.20 },
+  { semana: 17, juego: "Chargers vs Raiders", cuota: 1.90 },
+  { semana: 18, juego: "Vikings vs Bears", cuota: 1.80 }
+];
+
+const partidosDiv = document.getElementById("partidos");
+
+partidosNFL.forEach(p => {
+  partidosDiv.innerHTML += `
+    <div class="partido">
+      <strong>Semana ${p.semana}</strong><br>
+      ${p.juego}<br>
+      Cuota: x${p.cuota}
+      <button onclick="apostar('${p.juego}', ${p.cuota})">
+        Apostar
+      </button>
+    </div>
+  `;
+});
+
+/* =====================
+   CREAR APUESTA
+===================== */
+function apostar(juego, cuota) {
+  const monto = prompt(`¿Cuánto deseas apostar?\n${juego} (x${cuota})`);
+
+  if (!monto || isNaN(monto) || monto <= 0) {
+    alert("Monto inválido");
     return;
   }
 
-  d.apuestas.forEach(a => {
-    lista.innerHTML += `
-      <div class="card">
-        <strong>${a.tipo}</strong><br>
-        ${a.detalle}<br>
-        💵 $${a.monto} | x${a.cuota}<br>
-        <span class="estado abierta">${a.estado}</span>
-      </div>
-    `;
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "crearApuesta",
+      usuario,
+      tipo: "Straight",
+      detalle: juego,
+      monto: Number(monto),
+      cuota
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert(d.message);
+    cargarApuestas();
+  })
+  .catch(() => alert("Error de conexión"));
+}
+
+/* =====================
+   CARGAR APUESTAS
+===================== */
+function cargarApuestas() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "obtenerApuestas",
+      usuario
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const div = document.getElementById("apuestas");
+    div.innerHTML = "";
+
+    if (!d.apuestas || !d.apuestas.length) {
+      div.innerHTML = "<p>No tienes apuestas aún</p>";
+      return;
+    }
+
+    d.apuestas.forEach(a => {
+      div.innerHTML += `
+        <div class="card">
+          <strong>${a.tipo}</strong><br>
+          ${a.detalle}<br>
+          💵 $${a.monto} | x${a.cuota}<br>
+          Ganancia posible: $${a.posible}<br>
+          <span class="estado abierta">${a.estado}</span>
+        </div>
+      `;
+    });
   });
-});
+}
+
+cargarApuestas();
 </script>
 
 </body>
