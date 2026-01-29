@@ -1,0 +1,38 @@
+<input id="user" placeholder="Usuario">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="register()">Crear cuenta</button>
+<button onclick="login()">Login</button>
+
+<script>
+const API_URL = "PEGA_TU_URL_AQUI";
+
+function register() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "register",
+      usuario: user.value,
+      password: pass.value
+    })
+  })
+  .then(r => r.json())
+  .then(d => alert(d.message));
+}
+
+function login() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "login",
+      usuario: user.value,
+      password: pass.value
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) alert("Bienvenido " + d.usuario + " 💰 $" + d.dinero);
+    else alert(d.message);
+  });
+}
+</script>
