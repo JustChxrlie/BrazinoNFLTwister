@@ -126,62 +126,72 @@ function setMsg(text, color = "#555") {
 }
 
 function register() {
-  const usuario = user.value.trim();
-  const password = pass.value.trim();
+  const usuario = document.getElementById("usuario").value;
+  const password = document.getElementById("password").value;
 
-  if (!usuario || !password) {
-    setMsg("Completa todos los campos", "red");
-    return;
-  }
+  const payload = {
+    action: "register",
+    usuario,
+    password
+  };
 
-  setMsg("Creando cuenta...");
+  const form = Object.keys(payload)
+    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
+    .join("&");
 
   fetch(API_URL, {
     method: "POST",
-    body: JSON.stringify({
-      action: "register",
-      usuario,
-      password
-    })
+    body: form
   })
   .then(r => r.json())
   .then(d => {
-    setMsg(d.message, d.ok ? "green" : "red");
+    console.log(d);
+
+    if (!d.ok) return alert(d.message);
+
+    alert("Cuenta creada 🎉");
+    window.location.href = "login.html";
   })
-  .catch(() => setMsg("Error de conexión", "red"));
+  .catch(err => {
+    console.error(err);
+    alert("Error de conexión");
+  });
 }
 
 function login() {
-  const usuario = user.value.trim();
-  const password = pass.value.trim();
+  const usuario = document.getElementById("usuario").value;
+  const password = document.getElementById("password").value;
 
-  if (!usuario || !password) {
-    setMsg("Completa todos los campos", "red");
-    return;
-  }
+  const payload = {
+    action: "login",
+    usuario,
+    password
+  };
 
-  setMsg("Verificando...");
+  const form = Object.keys(payload)
+    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
+    .join("&");
 
   fetch(API_URL, {
     method: "POST",
-    body: JSON.stringify({
-      action: "login",
-      usuario,
-      password
-    })
+    body: form
   })
   .then(r => r.json())
   .then(d => {
-    if (d.ok) {
-      // Guardar sesión
-      localStorage.setItem("usuario", d.usuario);
-      localStorage.setItem("dinero", d.dinero);
-      window.location.href = "dashboard.html";
-    } else {
-      setMsg(d.message, "red");
-    }
+    console.log(d);
+
+    if (!d.ok) return alert(d.message);
+
+    localStorage.setItem("usuario", d.usuario);
+    localStorage.setItem("dinero", d.dinero);
+    localStorage.setItem("rol", d.rol);
+
+    window.location.href = "dashboard.html";
   })
-  .catch(() => setMsg("Error de conexión", "red"));
+  .catch(err => {
+    console.error(err);
+    alert("Error de conexión");
+  });
 }
 </script>
 
