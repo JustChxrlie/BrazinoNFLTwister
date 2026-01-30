@@ -12,85 +12,17 @@ body {
   color: white;
   display: flex;
 }
-
 main { flex: 1; padding: 20px; }
-
-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.partido {
-  background: #0f172a;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-}
-
-.titulo { font-weight: bold; margin-bottom: 10px; }
-
-.botones {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.btn {
-  background: #020617;
-  border: 1px solid #1e293b;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.btn.activo {
-  background: #22c55e;
-  color: black;
-  font-weight: bold;
-}
-
-#betSlip {
-  width: 320px;
-  background: #020617;
-  border-left: 2px solid #1e293b;
-  padding: 15px;
-}
-
-.seleccion { font-size: 14px; margin-bottom: 6px; }
-
-input {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
-  margin-top: 10px;
-}
-
-button.apostar {
-  margin-top: 10px;
-  width: 100%;
-  padding: 10px;
-  background: #facc15;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-@media (max-width: 900px) {
-  body { flex-direction: column; }
-  main { padding-bottom: 240px; }
-  #betSlip {
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    border-left: none;
-    border-top: 2px solid #1e293b;
-  }
-}
+header { display:flex; justify-content:space-between; margin-bottom:20px; }
+.partido { background:#0f172a; padding:15px; border-radius:12px; margin-bottom:15px; }
+.titulo { font-weight:bold; margin-bottom:10px; }
+.botones { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.btn { background:#020617; border:1px solid #1e293b; padding:10px; border-radius:8px; cursor:pointer; text-align:center; }
+.btn.activo { background:#22c55e; color:black; font-weight:bold; }
+#betSlip { width:320px; background:#020617; border-left:2px solid #1e293b; padding:15px; }
+.seleccion { font-size:14px; margin-bottom:6px; }
+input { width:100%; padding:8px; border-radius:6px; border:none; margin-top:10px; }
+button.apostar { margin-top:10px; width:100%; padding:10px; background:#facc15; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
 </style>
 </head>
 
@@ -115,26 +47,24 @@ button.apostar {
 </aside>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
+const API_URL = "TU_URL_DEL_APPS_SCRIPT";
 
 const usuario = localStorage.getItem("usuario");
 let saldo = Number(localStorage.getItem("dinero")) || 1000;
-
 document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
 
-const partidos = [
-  {
-    id: 1, juego: "Bills @ Chiefs",
-    opciones: [
-      {k:"mlc", t:"ML Chiefs", c:1.85},
-      {k:"mlb", t:"ML Bills", c:2.05},
-      {k:"ov", t:"Over 48.5", c:1.9},
-      {k:"un", t:"Under 48.5", c:1.9},
-      {k:"sc", t:"Chiefs -3.5", c:1.95},
-      {k:"sb", t:"Bills +3.5", c:1.95}
-    ]
-  }
-];
+const partidos = [{
+  id: 1,
+  juego: "Bills @ Chiefs",
+  opciones: [
+    {k:"mlc", t:"ML Chiefs", c:1.85},
+    {k:"mlb", t:"ML Bills", c:2.05},
+    {k:"ov", t:"Over 48", c:1.9},
+    {k:"un", t:"Under 48", c:1.9},
+    {k:"sc", t:"Chiefs -3", c:1.95},
+    {k:"sb", t:"Bills +3", c:1.95}
+  ]
+}];
 
 let selecciones = [];
 
@@ -147,8 +77,7 @@ function render() {
         <div class="titulo">${p.juego}</div>
         <div class="botones">
           ${p.opciones.map(o => `
-            <div class="btn"
-              onclick="toggle(${p.id},'${o.k}','${p.juego}','${o.t}',${o.c},this)">
+            <div class="btn" onclick="toggle(${p.id},'${o.k}','${p.juego}','${o.t}',${o.c},this)">
               ${o.t}<br>x${o.c}
             </div>`).join("")}
         </div>
@@ -194,34 +123,28 @@ function apostar() {
   if (!selecciones.length) return alert("Selecciona apuestas");
   if (monto <= 0 || monto > saldo) return alert("Saldo insuficiente");
 
-fetch(API_URL, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    action: "crearApuesta",   // 👈 AGREGA ESTA LÍNEA
-    usuario,
-    monto,
-    tipo: selecciones.length > 1 ? "Parlay" : "Simple",
-    cuota: Number(document.getElementById("cuota").textContent),
-    selecciones
+  fetch(API_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      action:"crearApuesta",
+      usuario,
+      monto,
+      tipo: selecciones.length > 1 ? "Parlay" : "Simple",
+      cuota: Number(document.getElementById("cuota").textContent),
+      selecciones
+    })
   })
-})
-
-
-  
-.then(r => r.json())
-.then(d => {
-  if (!d.ok) return alert(d.message);
-
-  // sincronizar saldo REAL desde Sheets
-  saldo = d.saldo;
-  localStorage.setItem("dinero", saldo);
-  document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
-
-  alert("Apuesta registrada 🎉");
-  location.reload();
-});
-  
+  .then(r => r.json())
+  .then(d => {
+    if (!d.ok) return alert(d.message);
+    saldo = d.saldo;
+    localStorage.setItem("dinero", saldo);
+    document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
+    alert("Apuesta registrada 🎉");
+    location.reload();
+  })
+  .catch(() => alert("Error de conexión"));
 }
 
 render();
