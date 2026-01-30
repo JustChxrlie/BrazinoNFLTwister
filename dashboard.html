@@ -198,7 +198,7 @@ fetch(API_URL, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    action: "crearApuesta",
+    action: "crearApuesta",   // 👈 AGREGA ESTA LÍNEA
     usuario,
     monto,
     tipo: selecciones.length > 1 ? "Parlay" : "Simple",
@@ -206,6 +206,9 @@ fetch(API_URL, {
     selecciones
   })
 })
+
+
+  
 .then(r => r.json())
 .then(d => {
   if (!d.ok) return alert(d.message);
@@ -218,10 +221,7 @@ fetch(API_URL, {
   alert("Apuesta registrada 🎉");
   location.reload();
 });
-
-
-  alert("Apuesta registrada 🎉");
-  location.reload();
+  
 }
 
 render();
