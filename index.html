@@ -5,99 +5,82 @@
 <title>Login / Registro</title>
 
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: linear-gradient(135deg, #6366f1, #4338ca);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+body {
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(135deg, #6366f1, #4338ca);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  .card {
-    background: white;
-    padding: 30px;
-    width: 340px;
-    border-radius: 14px;
-    box-shadow: 0 20px 40px rgba(0,0,0,.2);
-    text-align: center;
-  }
+.card {
+  background: white;
+  padding: 30px;
+  width: 340px;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  text-align: center;
+}
 
-  h2 {
-    margin-bottom: 20px;
-  }
+h2 { margin-bottom: 20px; }
 
-  .field {
-    margin-bottom: 15px;
-    text-align: left;
-  }
+.field {
+  margin-bottom: 15px;
+  text-align: left;
+}
 
-  label {
-    font-size: 13px;
-    color: #555;
-  }
+label {
+  font-size: 13px;
+  color: #555;
+}
 
-  input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin-top: 5px;
-    font-size: 15px;
-  }
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
 
-  input:focus {
-    outline: none;
-    border-color: #6366f1;
-  }
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
 
-  .buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-  }
+button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
 
-  button {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 15px;
-    transition: .2s;
-  }
+.register { background: #22c55e; color: white; }
+.login { background: #6366f1; color: white; }
 
-  .register {
-    background: #22c55e;
-    color: white;
-  }
-
-  .login {
-    background: #6366f1;
-    color: white;
-  }
-
-  #msg {
-    margin-top: 15px;
-    font-size: 14px;
-    min-height: 20px;
-  }
+#msg {
+  margin-top: 15px;
+  font-size: 14px;
+  min-height: 20px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-  <h2>Braziño, La casa de apuestas de la ÑFL</h2>
+  <h2>Braziño 🏈</h2>
 
   <div class="field">
     <label>Usuario</label>
-    <input id="usuario" placeholder="Ingresa tu usuario">
+    <input id="user" placeholder="Usuario">
   </div>
 
   <div class="field">
     <label>Password</label>
-    <input id="password" type="password" placeholder="••••••">
+    <input id="pass" type="password" placeholder="••••••">
   </div>
 
   <div class="buttons">
@@ -112,25 +95,27 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 const msg = document.getElementById("msg");
 
-function setMsg(text, color = "#555") {
+function setMsg(text, color="#333") {
   msg.textContent = text;
   msg.style.color = color;
 }
 
 function register() {
-  const usuario = document.getElementById("usuario").value;
-  const password = document.getElementById("password").value;
+  const usuario = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
 
-  if (!usuario || !password) {
+  if (!usuario || !password)
     return setMsg("Completa todos los campos", "red");
-  }
 
-  const form = `action=register&usuario=${encodeURIComponent(usuario)}&password=${encodeURIComponent(password)}`;
+  const form = new URLSearchParams({
+    action: "register",
+    usuario,
+    password
+  });
 
   fetch(API_URL, { method: "POST", body: form })
     .then(r => r.json())
     .then(d => {
-      console.log(d);
       if (!d.ok) return setMsg(d.message, "red");
       setMsg("Cuenta creada 🎉", "green");
     })
@@ -138,19 +123,21 @@ function register() {
 }
 
 function login() {
-  const usuario = document.getElementById("usuario").value;
-  const password = document.getElementById("password").value;
+  const usuario = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
 
-  if (!usuario || !password) {
+  if (!usuario || !password)
     return setMsg("Completa todos los campos", "red");
-  }
 
-  const form = `action=login&usuario=${encodeURIComponent(usuario)}&password=${encodeURIComponent(password)}`;
+  const form = new URLSearchParams({
+    action: "login",
+    usuario,
+    password
+  });
 
   fetch(API_URL, { method: "POST", body: form })
     .then(r => r.json())
     .then(d => {
-      console.log(d);
       if (!d.ok) return setMsg(d.message, "red");
 
       localStorage.setItem("usuario", d.usuario);
