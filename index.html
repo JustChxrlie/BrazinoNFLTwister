@@ -72,17 +72,9 @@
     color: white;
   }
 
-  .register:hover {
-    background: #16a34a;
-  }
-
   .login {
     background: #6366f1;
     color: white;
-  }
-
-  .login:hover {
-    background: #4f46e5;
   }
 
   #msg {
@@ -100,12 +92,12 @@
 
   <div class="field">
     <label>Usuario</label>
-    <input id="user" placeholder="Ingresa tu usuario">
+    <input id="usuario" placeholder="Ingresa tu usuario">
   </div>
 
   <div class="field">
     <label>Password</label>
-    <input id="pass" type="password" placeholder="••••••">
+    <input id="password" type="password" placeholder="••••••">
   </div>
 
   <div class="buttons">
@@ -129,69 +121,45 @@ function register() {
   const usuario = document.getElementById("usuario").value;
   const password = document.getElementById("password").value;
 
-  const payload = {
-    action: "register",
-    usuario,
-    password
-  };
+  if (!usuario || !password) {
+    return setMsg("Completa todos los campos", "red");
+  }
 
-  const form = Object.keys(payload)
-    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
-    .join("&");
+  const form = `action=register&usuario=${encodeURIComponent(usuario)}&password=${encodeURIComponent(password)}`;
 
-  fetch(API_URL, {
-    method: "POST",
-    body: form
-  })
-  .then(r => r.json())
-  .then(d => {
-    console.log(d);
-
-    if (!d.ok) return alert(d.message);
-
-    alert("Cuenta creada 🎉");
-    window.location.href = "login.html";
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Error de conexión");
-  });
+  fetch(API_URL, { method: "POST", body: form })
+    .then(r => r.json())
+    .then(d => {
+      console.log(d);
+      if (!d.ok) return setMsg(d.message, "red");
+      setMsg("Cuenta creada 🎉", "green");
+    })
+    .catch(() => setMsg("Error de conexión", "red"));
 }
 
 function login() {
   const usuario = document.getElementById("usuario").value;
   const password = document.getElementById("password").value;
 
-  const payload = {
-    action: "login",
-    usuario,
-    password
-  };
+  if (!usuario || !password) {
+    return setMsg("Completa todos los campos", "red");
+  }
 
-  const form = Object.keys(payload)
-    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
-    .join("&");
+  const form = `action=login&usuario=${encodeURIComponent(usuario)}&password=${encodeURIComponent(password)}`;
 
-  fetch(API_URL, {
-    method: "POST",
-    body: form
-  })
-  .then(r => r.json())
-  .then(d => {
-    console.log(d);
+  fetch(API_URL, { method: "POST", body: form })
+    .then(r => r.json())
+    .then(d => {
+      console.log(d);
+      if (!d.ok) return setMsg(d.message, "red");
 
-    if (!d.ok) return alert(d.message);
+      localStorage.setItem("usuario", d.usuario);
+      localStorage.setItem("dinero", d.dinero);
+      localStorage.setItem("rol", d.rol);
 
-    localStorage.setItem("usuario", d.usuario);
-    localStorage.setItem("dinero", d.dinero);
-    localStorage.setItem("rol", d.rol);
-
-    window.location.href = "dashboard.html";
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Error de conexión");
-  });
+      window.location.href = "dashboard.html";
+    })
+    .catch(() => setMsg("Error de conexión", "red"));
 }
 </script>
 
