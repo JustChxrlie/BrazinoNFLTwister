@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Braziño – Admin</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: #020617;
+  color: white;
+  padding: 20px;
+}
+
+h2 { margin-bottom: 10px; }
+
+.partido {
+  background: #0f172a;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.guardar {
+  background: #22c55e;
+}
+
+.liquidar {
+  background: #facc15;
+  margin-top: 20px;
+  width: 100%;
+}
+
+#msg {
+  margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Panel Administrador 🧑‍⚖️</h2>
+<p id="msg"></p>
+
+<div class="partido">
+  <strong>Bills @ Chiefs</strong>
+
+  <div class="row">
+    <input id="pl" type="number" placeholder="Puntos Chiefs">
+    <input id="pv" type="number" placeholder="Puntos Bills">
+  </div>
+
+  <div class="row">
+    <button class="guardar" onclick="guardarResultado()">
+      Guardar resultado
+    </button>
+  </div>
+</div>
+
+<button class="liquidar" onclick="liquidar()">
+  💰 LIQUIDAR APUESTAS
+</button>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzGMm2P_R2IE6dTD3au5CyuLV-1U41uzRukMWdgynLb6EAjLKmiss3crH7gIxq-eIj3xg/exec";
+
+const rol = localStorage.getItem("rol");
+if (rol !== "admin") {
+  alert("Acceso denegado");
+  location.href = "dashboard.html";
+}
+
+const msg = document.getElementById("msg");
+
+function guardarResultado() {
+  const pl = Number(document.getElementById("pl").value);
+  const pv = Number(document.getElementById("pv").value);
+
+  if (isNaN(pl) || isNaN(pv)) {
+    msg.textContent = "❌ Ingresa ambos marcadores";
+    return;
+  }
+
+  const payload = {
+    action: "guardarResultado",
+    juego: "Bills @ Chiefs",
+    local: "Chiefs",
+    pl,
+    visita: "Bills",
+    pv
+  };
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.ok ? "✅ Resultado guardado" : "❌ " + d.message;
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+
+function liquidar() {
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "liquidar" })
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.ok ? "💰 Parlays liquidados" : "❌ " + d.message;
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+</script>
+
+</body>
+</html>
