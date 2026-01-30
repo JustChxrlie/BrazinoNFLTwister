@@ -115,7 +115,7 @@ button.apostar {
 </aside>
 
 <script>
-const API_URL = "TU_URL_DEL_SCRIPT";
+const API_URL = "https://script.google.com/macros/s/AKfycbwMEy_3ORHLApNc18LhChqInM5rAMAusnEqf15miFtsnhS25G40q0zNveQfkirofRw5oA/exec";
 
 const usuario = localStorage.getItem("usuario");
 let saldo = Number(localStorage.getItem("dinero")) || 1000;
@@ -194,21 +194,31 @@ function apostar() {
   if (!selecciones.length) return alert("Selecciona apuestas");
   if (monto <= 0 || monto > saldo) return alert("Saldo insuficiente");
 
-  saldo -= monto;
+fetch(API_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "crearApuesta",
+    usuario,
+    monto,
+    tipo: selecciones.length > 1 ? "Parlay" : "Simple",
+    cuota: Number(document.getElementById("cuota").textContent),
+    selecciones
+  })
+})
+.then(r => r.json())
+.then(d => {
+  if (!d.ok) return alert(d.message);
+
+  // sincronizar saldo REAL desde Sheets
+  saldo = d.saldo;
   localStorage.setItem("dinero", saldo);
   document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
 
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      usuario,
-      monto,
-      saldo,
-      tipo: selecciones.length > 1 ? "Parlay" : "Simple",
-      selecciones
-    })
-  });
+  alert("Apuesta registrada 🎉");
+  location.reload();
+});
+
 
   alert("Apuesta registrada 🎉");
   location.reload();
