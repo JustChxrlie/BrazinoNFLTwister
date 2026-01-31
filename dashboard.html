@@ -84,7 +84,8 @@ function cargarPartidosDesdeSheets() {
       d.partidos.forEach((p, i) => {
         partidos.push({
           id: i + 1,
-          juego: `${p.visitante} @ ${p.local}`,
+          juego_id: p.juego, // 👈 ID REAL
+          titulo: `${p.visitante} @ ${p.local}`, // solo para mostrar
           opciones: [
             { k: "ml_local", t: `ML ${p.local}`, c: 1.90 },
             { k: "ml_visita", t: `ML ${p.visitante}`, c: 1.90 },
@@ -92,7 +93,7 @@ function cargarPartidosDesdeSheets() {
             { k: "un", t: "Under 48", c: 1.90 },
             { k: "sp_local", t: `${p.local} -3`, c: 1.95 },
             { k: "sp_visita", t: `${p.visitante} +3`, c: 1.95 }
-          ]
+        ]
         });
       });
 
