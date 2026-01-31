@@ -67,9 +67,6 @@ button {
 <h3>Partidos de la semana</h3>
 <div id="listaPartidos"></div>
 
-<div class="partido">
-  <strong>Bills @ Chiefs</strong>
-
   <div class="row">
     <input id="pl" type="number" placeholder="Puntos Chiefs">
     <input id="pv" type="number" placeholder="Puntos Bills">
@@ -96,36 +93,6 @@ if (rol !== "admin") {
 }
 
 const msg = document.getElementById("msg");
-
-function guardarResultado() {
-  const pl = Number(document.getElementById("pl").value);
-  const pv = Number(document.getElementById("pv").value);
-
-  if (isNaN(pl) || isNaN(pv)) {
-    msg.textContent = "❌ Ingresa ambos marcadores";
-    return;
-  }
-
-  const payload = {
-    action: "guardarResultado",
-    juego: "Bills @ Chiefs",
-    local: "Chiefs",
-    pl,
-    visita: "Bills",
-    pv
-  };
-
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
-  .then(r => r.json())
-  .then(d => {
-    msg.textContent = d.ok ? "✅ Resultado guardado" : "❌ " + d.message;
-  })
-  .catch(() => msg.textContent = "❌ Error de conexión");
-}
 
 function liquidar() {
   fetch(API_URL, {
@@ -205,6 +172,8 @@ function guardarResultadoMultiple(i, local, visita, juego) {
     visita,
     pv
   };
+  
+console.log({ juego, local, visita, pl, pv });
 
   fetch(API_URL, {
     method: "POST",
