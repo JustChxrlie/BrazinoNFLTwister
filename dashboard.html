@@ -54,7 +54,6 @@ let saldo = Number(localStorage.getItem("dinero")) || 1000;
 document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
 
 const partidos = [];
-}];
 
 // ===============================
 // 🏈 NUEVO: cargar partidos desde Sheets
@@ -68,24 +67,37 @@ function cargarPartidosDesdeSheets() {
         return;
       }
 
-      // Convertimos a la estructura que YA usa el dashboard
       partidos.length = 0; // vacía sin romper referencia
 
       d.partidos.forEach((p, i) => {
-        partidos.push({
-          id: i + 1,
-          juego_id: p.juego, // 👈 ID REAL
-          titulo: `${p.visitante} @ ${p.local}`, // solo para mostrar
-          opciones: [
-            { k: "ml_local", t: `ML ${p.local}`, c: p.ml_local },
-            { k: "ml_visita", t: `ML ${p.visitante}`, c: p.ml_visita },
-            { k: "ov", t: `Over ${p.ou}`, c: 1.90 },
-            { k: "un", t: `Under ${p.ou}`, c: 1.90 },
-            { k: "sp_local", t: `${p.local} ${p.spread}`, c: 1.95 },
-            { k: "sp_visita", t: `${p.visitante} ${-p.spread}`, c: 1.95 }
-          ]
-        });
-      });
+
+        let spreadLocal, spreadVisita;
+
+  if (p.fav === "local") {
+    spreadLocal  = `-${Math.abs(p.spread)}`;
+    spreadVisita = `+${Math.abs(p.spread)}`;
+  } else {
+    spreadLocal  = `+${Math.abs(p.spread)}`;
+    spreadVisita = `-${Math.abs(p.spread)}`;
+  }
+
+  partidos.push({
+    id: i + 1,
+    juego_id: p.juego,
+    titulo: `${p.visita} @ ${p.local}`,
+    opciones: [
+      { k: "ml_local",  t: `ML ${p.local}`,   c: p.ml_local },
+      { k: "ml_visita", t: `ML ${p.visita}`,  c: p.ml_visita },
+      { k: "ov",        t: `Over ${p.ou}`,    c: 1.90 },
+      { k: "un",        t: `Under ${p.ou}`,   c: 1.90 },
+
+      // 👇 AQUÍ SE USAN
+      { k: "sp_local",  t: `${p.local} ${spreadLocal}`,   c: 1.95 },
+      { k: "sp_visita", t: `${p.visita} ${spreadVisita}`, c: 1.95 }
+    ]
+  });
+});
+
 
       render(); // vuelve a pintar
     })
