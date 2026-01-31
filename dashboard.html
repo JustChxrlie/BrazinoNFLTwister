@@ -66,6 +66,41 @@ const partidos = [{
   ]
 }];
 
+// ===============================
+// 🏈 NUEVO: cargar partidos desde Sheets
+// ===============================
+function cargarPartidosDesdeSheets() {
+  fetch(API_URL + "?action=obtenerPartidos")
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) {
+        console.warn("No se cargaron partidos desde Sheets");
+        return;
+      }
+
+      // Convertimos a la estructura que YA usa el dashboard
+      partidos.length = 0; // vacía sin romper referencia
+
+      d.partidos.forEach((p, i) => {
+        partidos.push({
+          id: i + 1,
+          juego: `${p.visitante} @ ${p.local}`,
+          opciones: [
+            { k: "ml_local", t: `ML ${p.local}`, c: 1.90 },
+            { k: "ml_visita", t: `ML ${p.visitante}`, c: 1.90 },
+            { k: "ov", t: "Over 48", c: 1.90 },
+            { k: "un", t: "Under 48", c: 1.90 },
+            { k: "sp_local", t: `${p.local} -3`, c: 1.95 },
+            { k: "sp_visita", t: `${p.visitante} +3`, c: 1.95 }
+          ]
+        });
+      });
+
+      render(); // vuelve a pintar
+    })
+    .catch(() => console.error("Error cargando partidos"));
+}
+  
 let selecciones = [];
 
 function render() {
@@ -163,6 +198,7 @@ function apostar() {
 }
 
 render();
+cargarPartidosDesdeSheets();
 </script>
 
 </body>
