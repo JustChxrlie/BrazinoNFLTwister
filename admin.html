@@ -68,11 +68,6 @@ button {
 <div id="listaPartidos"></div>
 
   <div class="row">
-    <input id="pl" type="number" placeholder="Puntos Chiefs">
-    <input id="pv" type="number" placeholder="Puntos Bills">
-  </div>
-
-  <div class="row">
     <button class="guardar" onclick="guardarResultado()">
       Guardar resultado
     </button>
@@ -134,15 +129,15 @@ function renderPartidos(partidos) {
     div.className = "partido";
 
     div.innerHTML = `
-      <strong>Semana ${p.semana} – ${p.visitante} @ ${p.local}</strong>
+      <strong>Semana ${p.semana} – ${p.visita} @ ${p.local}</strong>
 
       <div class="row">
         <input type="number" id="pl_${i}" placeholder="Puntos ${p.local}">
-        <input type="number" id="pv_${i}" placeholder="Puntos ${p.visitante}">
+        <input type="number" id="pv_${i}" placeholder="Puntos ${p.visita}">
       </div>
 
       <div class="row">
-        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visitante}', '${p.juego}')">
+        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visita}', '${p.juego}')">
           Guardar resultado
         </button>
       </div>
