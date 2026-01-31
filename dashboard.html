@@ -83,6 +83,7 @@ function cargarPartidosDesdeSheets() {
 
   partidos.push({
     id: i + 1,
+    semana: p.semana,          
     juego_id: p.juego,
     titulo: `${p.visita} @ ${p.local}`,
     opciones: [
