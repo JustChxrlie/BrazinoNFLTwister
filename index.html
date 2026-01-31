@@ -16,10 +16,11 @@ body {
 
 .card {
   background: white;
-  padding: 30px;
-  width: 340px;
-  border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  padding: 28px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
   text-align: center;
 }
 
@@ -37,11 +38,13 @@ label {
 
 input {
   width: 100%;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   border: 1px solid #ccc;
-  margin-top: 5px;
+  margin-top: 6px;
+  font-size: 16px; /* 🔥 evita zoom en iOS */
 }
+
 
 .buttons {
   display: flex;
@@ -51,10 +54,16 @@ input {
 
 button {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+  
+button:active {
+  transform: scale(0.97);
 }
 
 .register { background: #22c55e; color: white; }
@@ -65,6 +74,36 @@ button {
   font-size: 14px;
   min-height: 20px;
 }
+
+@media (max-width: 480px) {
+
+  body {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 24px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+#msg {
+  margin-top: 18px;
+  font-size: 14px;
+  min-height: 20px;
+  font-weight: 500;
+}
+
 </style>
 </head>
 
@@ -85,7 +124,7 @@ button {
 
   <div class="buttons">
     <button class="register" onclick="register()">Crear cuenta</button>
-    <button class="login" onclick="login()">Login</button>
+    <button class="login" onclick="login()">Iniciar Sesion</button>
   </div>
 
   <div id="msg"></div>
@@ -117,7 +156,7 @@ function register() {
     .then(r => r.json())
     .then(d => {
       if (!d.ok) return setMsg(d.message, "red");
-      setMsg("Cuenta creada 🎉", "green");
+      setMsg("Cuenta creada 🎉, puedes iniciar sesion", "green");
     })
     .catch(() => setMsg("Error de conexión", "red"));
 }
