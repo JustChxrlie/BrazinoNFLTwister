@@ -53,17 +53,7 @@ const usuario = localStorage.getItem("usuario");
 let saldo = Number(localStorage.getItem("dinero")) || 1000;
 document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
 
-const partidos = [{
-  id: 1,
-  juego: "Bills @ Chiefs",
-  opciones: [
-    {k:"mlc", t:"ML Chiefs", c:1.85},
-    {k:"mlb", t:"ML Bills", c:2.05},
-    {k:"ov", t:"Over 48", c:1.9},
-    {k:"un", t:"Under 48", c:1.9},
-    {k:"sc", t:"Chiefs -3", c:1.95},
-    {k:"sb", t:"Bills +3", c:1.95}
-  ]
+const partidos = [];
 }];
 
 // ===============================
@@ -87,13 +77,13 @@ function cargarPartidosDesdeSheets() {
           juego_id: p.juego, // 👈 ID REAL
           titulo: `${p.visitante} @ ${p.local}`, // solo para mostrar
           opciones: [
-            { k: "ml_local", t: `ML ${p.local}`, c: 1.90 },
-            { k: "ml_visita", t: `ML ${p.visitante}`, c: 1.90 },
-            { k: "ov", t: "Over 48", c: 1.90 },
-            { k: "un", t: "Under 48", c: 1.90 },
-            { k: "sp_local", t: `${p.local} -3`, c: 1.95 },
-            { k: "sp_visita", t: `${p.visitante} +3`, c: 1.95 }
-        ]
+            { k: "ml_local", t: `ML ${p.local}`, c: p.ml_local },
+            { k: "ml_visita", t: `ML ${p.visitante}`, c: p.ml_visita },
+            { k: "ov", t: `Over ${p.ou}`, c: 1.90 },
+            { k: "un", t: `Under ${p.ou}`, c: 1.90 },
+            { k: "sp_local", t: `${p.local} ${p.spread}`, c: 1.95 },
+            { k: "sp_visita", t: `${p.visitante} ${-p.spread}`, c: 1.95 }
+          ]
         });
       });
 
@@ -110,10 +100,10 @@ function render() {
   partidos.forEach(p => {
     cont.innerHTML += `
       <div class="partido">
-        <div class="titulo">${p.juego}</div>
+        <div class="titulo">${p.titulo}</div>
         <div class="botones">
           ${p.opciones.map(o => `
-            <div class="btn" onclick="toggle(${p.id},'${o.k}','${p.juego}','${o.t}',${o.c},this)">
+            <div class="btn" onclick="toggle(${p.id},'${o.k}','${p.juego_id}','${o.t}',${o.c},this)">
               ${o.t}<br>x${o.c}
             </div>`).join("")}
         </div>
@@ -139,7 +129,7 @@ function actualizar() {
   let cuota = 1;
   selecciones.forEach(s => {
     cuota *= s.cuota;
-    div.innerHTML += `<div class="seleccion">${s.texto} (${s.juego})</div>`;
+    div.innerHTML += `<div class="seleccion">${s.texto}</div>`;
   });
   document.getElementById("cuota").textContent = cuota.toFixed(2);
   document.getElementById("tipoApuesta").textContent =
