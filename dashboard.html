@@ -99,7 +99,7 @@ button.apostar { margin-top:10px; width:100%; padding:10px; background:#facc15; 
 
 <main>
   <header>
-    <h2>Braziño, La casa oficial de la ÑFL 🏈</h2>
+    <h2>Braziño, La casa de apuestas oficial de la ÑFL 🏈</h2>
     <span id="saldo"></span>
   </header>
   <div id="partidos"></div>
@@ -143,6 +143,8 @@ function cargarPartidosDesdeSheets() {
       partidos.length = 0; // vacía sin romper referencia
 
       d.partidos.forEach((p, i) => {
+
+        if (p.cerrado) return;
 
         let spreadLocal, spreadVisita;
 
