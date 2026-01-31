@@ -23,6 +23,22 @@ header { display:flex; justify-content:space-between; margin-bottom:20px; }
   color: black;
   font-weight: bold;
   transform: scale(1.02);
+  }
+.apuesta {
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.apuesta.ganada { border-left: 4px solid #22c55e; }
+.apuesta.perdida { border-left: 4px solid #ef4444; }
+.apuesta.abierta { border-left: 4px solid #facc15; }
+
+.apuesta .estado {
+  font-weight: bold;
+  text-transform: capitalize;
 }
 #betSlip { width:320px; background:#020617; border-left:2px solid #1e293b; padding:15px; }
 .seleccion { font-size:14px; margin-bottom:6px; }
@@ -97,6 +113,9 @@ button.apostar { margin-top:10px; width:100%; padding:10px; background:#facc15; 
   <p>Pago potencial: <strong id="pago">$0.00</strong></p>
   <input type="number" id="monto" placeholder="Monto a apostar" oninput="calcular()">
   <button class="apostar" onclick="apostar()">Apostar</button>
+  <hr style="margin:15px 0;border-color:#1e293b">
+  <h4>📄 Mis apuestas</h4>
+  <div id="misApuestas"></div>
 </aside>
 
 <script>
@@ -169,6 +188,27 @@ function agruparPorSemana(partidos) {
   return map;
 }
 
+function cargarMisApuestas() {
+  fetch(`${API_URL}?action=obtenerApuestasUsuario&usuario=${usuario}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
+
+      const cont = document.getElementById("misApuestas");
+      cont.innerHTML = "";
+
+      d.apuestas.forEach(a => {
+        cont.innerHTML += `
+          <div class="apuesta ${a.estado}">
+            <div class="estado">${a.tipo} • ${a.estado}</div>
+            ${a.picks.map(p => `<div>• ${p}</div>`).join("")}
+            <div>Monto: $${a.monto}</div>
+            <div>Posible: $${a.posible}</div>
+          </div>
+        `;
+      });
+    });
+}
 
 function render() {
   const cont = document.getElementById("partidos");
@@ -287,6 +327,7 @@ function apostar() {
   });
 }
 
+cargarMisApuestas();
 render();
 cargarPartidosDesdeSheets();
 </script>
