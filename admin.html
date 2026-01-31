@@ -118,6 +118,7 @@ function renderPartidos(partidos) {
   contenedor.innerHTML = "";
 
   partidos.forEach((p, i) => {
+    if (p.cerrado) return; // 🔹 no mostrar partido cerrado
     const div = document.createElement("div");
     div.className = "partido";
 
@@ -129,17 +130,71 @@ function renderPartidos(partidos) {
         <input type="number" id="pv_${i}" placeholder="Puntos ${p.visita}">
       </div>
 
-      <div class="row">
-        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visita}', '${p.juego}')">
-          Guardar resultado
-        </button>
-      </div>
-    `;
+<div class="row">
+  <!-- Botón para guardar resultado -->
+  <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visita}', '${p.juego}')">
+    Guardar resultado
+  </button>
+
+  <!-- Botón para cerrar/abrir partido -->
+  <button class="guardar" onclick="toggleCerrado('${p.juego}', ${p.cerrado})">
+    ${p.cerrado ? "Abrir partido" : "Cerrar partido"}
+  </button>
+</div>
+
+<div class="row">
+  <!-- Input para semana y botón para cerrar/abrir semana completa -->
+  <input type="number" id="semanaCerrar" placeholder="Semana a cerrar/abrir">
+  <button class="guardar" onclick="cerrarSemanaAdmin()">
+    Cerrar/abrir semana
+  </button>
+</div>
+
 
     contenedor.appendChild(div);
   });
 }
 
+function toggleCerrado(juego, cerradoActual) {
+  const cerrado = !cerradoActual;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "cerrarPartido",
+      juego,
+      cerrado
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.message;
+    cargarPartidos(); // recarga la lista
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+
+function cerrarSemanaAdmin() {
+  const semana = Number(document.getElementById("semanaCerrar").value);
+  if (!semana) return alert("Ingresa número de semana");
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "cerrarSemana",
+      semana,
+      cerrado: true
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.message;
+    cargarPartidos();
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+
+  
 // ===============================
 // 💾 NUEVO: guardar resultado por partido
 // ===============================
