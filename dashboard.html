@@ -106,22 +106,46 @@ function cargarPartidosDesdeSheets() {
   
 let selecciones = [];
 
+function agruparPorSemana(partidos) {
+  const map = {};
+  partidos.forEach(p => {
+    if (!map[p.semana]) map[p.semana] = [];
+    map[p.semana].push(p);
+  });
+  return map;
+}
+
+
 function render() {
   const cont = document.getElementById("partidos");
   cont.innerHTML = "";
-  partidos.forEach(p => {
+
+  const semanas = agruparPorSemana(partidos);
+
+  Object.keys(semanas).sort((a,b)=>a-b).forEach(semana => {
+
     cont.innerHTML += `
-      <div class="partido">
-        <div class="titulo">${p.titulo}</div>
-        <div class="botones">
-          ${p.opciones.map(o => `
-            <div class="btn" onclick="toggle(${p.id},'${o.k}','${p.juego_id}','${o.t}',${o.c},this)">
-              ${o.t}<br>x${o.c}
-            </div>`).join("")}
+      <h3 style="margin:20px 0 10px">📅 Semana ${semana}</h3>
+    `;
+
+    semanas[semana].forEach(p => {
+      cont.innerHTML += `
+        <div class="partido">
+          <div class="titulo">${p.titulo}</div>
+          <div class="botones">
+            ${p.opciones.map(o => `
+              <div class="btn"
+                onclick="toggle(${p.id},'${o.k}','${p.juego_id}','${o.t}',${o.c},this)">
+                ${o.t}<br>x${o.c}
+              </div>
+            `).join("")}
+          </div>
         </div>
-      </div>`;
+      `;
+    });
   });
 }
+
 
 function toggle(pid, key, juego, texto, cuota, el) {
   const i = selecciones.findIndex(s => s.pid===pid && s.key===key);
