@@ -64,6 +64,9 @@ button {
 <h2>Panel Administrador 🧑‍⚖️</h2>
 <p id="msg"></p>
 
+<h3>Partidos de la semana</h3>
+<div id="listaPartidos"></div>
+
 <div class="partido">
   <strong>Bills @ Chiefs</strong>
 
@@ -127,15 +130,100 @@ function guardarResultado() {
 function liquidar() {
   fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "liquidar" })
+    body: new URLSearchParams({ action: "liquidar" })
   })
   .then(r => r.json())
   .then(d => {
-    msg.textContent = d.ok ? "💰 Parlays liquidados" : "❌ " + d.message;
+    msg.textContent = d.ok ? "💰 Apuestas liquidadas" : "❌ " + d.message;
   })
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
+
+  // ===============================
+// 🏈 NUEVO: cargar partidos desde Sheets
+// ===============================
+const contenedor = document.getElementById("listaPartidos");
+
+// Llama a Apps Script para traer los partidos
+function cargarPartidos() {
+  fetch(API_URL + "?action=obtenerPartidos")
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) {
+        msg.textContent = "❌ No se pudieron cargar los partidos";
+        return;
+      }
+      renderPartidos(d.partidos);
+    })
+    .catch(() => msg.textContent = "❌ Error de conexión al cargar partidos");
+}
+
+// Render dinámico de partidos
+function renderPartidos(partidos) {
+  contenedor.innerHTML = "";
+
+  partidos.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "partido";
+
+    div.innerHTML = `
+      <strong>Semana ${p.semana} – ${p.visitante} @ ${p.local}</strong>
+
+      <div class="row">
+        <input type="number" id="pl_${i}" placeholder="Puntos ${p.local}">
+        <input type="number" id="pv_${i}" placeholder="Puntos ${p.visitante}">
+      </div>
+
+      <div class="row">
+        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visitante}', '${p.juego}')">
+          Guardar resultado
+        </button>
+      </div>
+    `;
+
+    contenedor.appendChild(div);
+  });
+}
+
+// ===============================
+// 💾 NUEVO: guardar resultado por partido
+// ===============================
+function guardarResultadoMultiple(i, local, visita, juego) {
+  const pl = Number(document.getElementById(`pl_${i}`).value);
+  const pv = Number(document.getElementById(`pv_${i}`).value);
+
+  if (isNaN(pl) || isNaN(pv)) {
+    msg.textContent = "❌ Ingresa ambos marcadores";
+    return;
+  }
+
+  const payload = {
+    action: "guardarResultado",
+    juego,
+    local,
+    pl,
+    visita,
+    pv
+  };
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.ok
+      ? `✅ Resultado guardado (${juego})`
+      : "❌ " + d.message;
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+
+// ===============================
+// 🚀 Cargar partidos al iniciar
+// ===============================
+cargarPartidos();
 </script>
 
 </body>
