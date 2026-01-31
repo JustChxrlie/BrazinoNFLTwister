@@ -124,6 +124,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzGMm2P_R2IE6dTD3au5Cyu
 const usuario = localStorage.getItem("usuario");
 let saldo = Number(localStorage.getItem("dinero")) || 1000;
 document.getElementById("saldo").textContent = "💰 $" + saldo.toFixed(2);
+let cuotaDecimalActual = 1;
 
 const partidos = [];
 
@@ -261,9 +262,12 @@ function actualizar() {
     cuota *= s.cuota;
     div.innerHTML += `<div class="seleccion">${s.texto}</div>`;
   });
-  document.getElementById("cuota").textContent = cuota.toFixed(2);
+  cuotaDecimalActual = cuota;
+  document.getElementById("cuota").textContent =
+  decimalAMomio(cuotaDecimalActual);
   document.getElementById("tipoApuesta").textContent =
-    selecciones.length > 1 ? "🧩 Parlay" : "🎯 Simple";
+  selecciones.length > 1 ? "🧩 Parlay" : "🎯 Simple";
+
   calcular();
 }
 
@@ -278,9 +282,10 @@ function decimalAMomio(decimal) {
   
 function calcular() {
   const monto = Number(document.getElementById("monto").value);
-  const cuota = Number(document.getElementById("cuota").textContent);
   document.getElementById("pago").textContent =
-    monto > 0 ? "$" + (monto * cuota).toFixed(2) : "$0.00";
+    monto > 0
+      ? "$" + (monto * cuotaDecimalActual).toFixed(2)
+      : "$0.00";
 }
 
 function apostar() {
@@ -288,14 +293,15 @@ function apostar() {
   if (!selecciones.length) return alert("Selecciona apuestas");
   if (monto <= 0 || monto > saldo) return alert("Saldo insuficiente");
 
-  const payload = {
-    action: "crearApuesta",
-    usuario,
-    monto,
-    tipo: selecciones.length > 1 ? "Parlay" : "Simple",
-    cuota: Number(document.getElementById("cuota").textContent),
-    selecciones: JSON.stringify(selecciones)
-  };
+const payload = {
+  action: "crearApuesta",
+  usuario,
+  monto,
+  tipo: selecciones.length > 1 ? "Parlay" : "Simple",
+  cuota: cuotaDecimalActual,
+  selecciones: JSON.stringify(selecciones)
+};
+
 
   const form = Object.keys(payload)
     .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
