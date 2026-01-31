@@ -129,12 +129,12 @@ function renderPartidos(partidos) {
       <strong>Semana ${p.semana} – ${p.visita} @ ${p.local}</strong>
 
       <div class="row">
-        <input type="number" id="pl_${i}" placeholder="Puntos ${p.local}" ${p.cerrado ? "disabled" : ""}>
-        <input type="number" id="pv_${i}" placeholder="Puntos ${p.visita}" ${p.cerrado ? "disabled" : ""}>
+        <input type="number" id="pl_${i}" placeholder="Puntos ${p.visita}" ${p.cerrado ? "disabled" : ""}>
+        <input type="number" id="pv_${i}" placeholder="Puntos ${p.local}" ${p.cerrado ? "disabled" : ""}>
       </div>
 
       <div class="row">
-        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.local}', '${p.visita}', '${p.juego}')" ${p.cerrado ? "disabled" : ""}>
+        <button class="guardar" onclick="guardarResultadoMultiple(${i}, '${p.visita}', '${p.local}', '${p.juego}')" ${p.cerrado ? "disabled" : ""}>
           Guardar resultado
         </button>
 
@@ -191,8 +191,8 @@ function cerrarSemanaAdmin() {
 
 // Guardar resultado de partido
 function guardarResultadoMultiple(i, local, visita, juego) {
-  const pl = Number(document.getElementById(`pl_${i}`).value);
-  const pv = Number(document.getElementById(`pv_${i}`).value);
+  const pl = Number(document.getElementById(`pv_${i}`).value);
+  const pv = Number(document.getElementById(`pl_${i}`).value);
 
   if (isNaN(pl) || isNaN(pv)) {
     msg.textContent = "❌ Ingresa ambos marcadores";
