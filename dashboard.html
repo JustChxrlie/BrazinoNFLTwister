@@ -252,7 +252,7 @@ function cargarFuturos() {
 
       Object.keys(categorias).forEach(cat => {
         // ordenar por mejor cuota
-        categorias[cat].sort((a, b) => b.cuota - a.cuota);
+        categorias[cat].sort((a, b) => a.cuota - b.cuota);
 
         const catDiv = document.createElement("div");
         catDiv.className = "futuroCategoria";
@@ -351,8 +351,6 @@ function render() {
 
 
 function toggleFuturo(id, categoria, opcion, cuota, el) {
-
-  // ❌ No mezclar partidos con futuros
   if (selecciones.length && selecciones[0].tipo !== "futuro") {
     return alert("No puedes combinar partidos con apuestas futuras");
   }
