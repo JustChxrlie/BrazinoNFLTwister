@@ -40,6 +40,36 @@ header { display:flex; justify-content:space-between; margin-bottom:20px; }
   font-weight: bold;
   text-transform: capitalize;
 }
+  .futuroCategoria {
+  margin-top: 15px;
+  padding: 10px;
+  background: #0f172a;
+  border-radius: 12px;
+}
+
+.futuroTitulo {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.futuroOpcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  background: #1e293b;
+  border-radius: 6px;
+}
+
+.futuroOpcion button {
+  background: #facc15;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
 #betSlip { width:320px; background:#020617; border-left:2px solid #1e293b; padding:15px; }
 .seleccion { font-size:14px; margin-bottom:6px; }
 input { width:100%; padding:8px; border-radius:6px; border:none; margin-top:10px; }
@@ -102,6 +132,10 @@ button.apostar { margin-top:10px; width:100%; padding:10px; background:#facc15; 
     <h2>Braziño, La casa de apuestas oficial de la ÑFL 🏈</h2>
     <span id="saldo"></span>
   </header>
+  <div id="futurosContainer">
+    <h3>🏆 Apuestas Futuras</h3>
+    <div id="futuros"></div>
+  </div>
   <div id="partidos"></div>
 </main>
 
@@ -191,6 +225,86 @@ function agruparPorSemana(partidos) {
   return map;
 }
 
+function toggleFuturos() {
+  const cont = document.getElementById("futuros");
+  cont.style.display = cont.style.display === "none" ? "block" : "none";
+}
+
+// Cargar apuestas futuras desde Sheets
+function cargarFuturos() {
+  fetch(`${API_URL}?action=obtenerFuturos`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
+      const cont = document.getElementById("futuros");
+      cont.innerHTML = "";
+
+      // Agrupar por categoria
+      const categorias = {};
+      d.futuros.forEach(f => {
+        if (f.cerrado) return; // solo abiertas
+        if (!categorias[f.catApuesta]) categorias[f.catApuesta] = [];
+        categorias[f.catApuesta].push(f);
+      });
+
+      Object.keys(categorias).forEach(cat => {
+        // Ordenar por mejor cuota (mayor)
+        categorias[cat].sort((a,b) => b.cuota - a.cuota);
+
+        const catDiv = document.createElement("div");
+        catDiv.className = "futuroCategoria";
+        catDiv.innerHTML = `<div class="futuroTitulo">🎖️ ${cat}</div>`;
+
+        categorias[cat].forEach(f => {
+          const opcionDiv = document.createElement("div");
+          opcionDiv.className = "futuroOpcion";
+          opcionDiv.innerHTML = `
+            <span>${f.opcion} • Cuota: ${f.cuota}</span>
+            <button onclick="apostarFuturo('${f.id}','${f.catApuesta}','${f.opcion}','${f.cuota}')">
+              Apostar
+            </button>
+          `;
+          catDiv.appendChild(opcionDiv);
+        });
+
+        cont.appendChild(catDiv);
+      });
+    })
+    .catch(() => console.error("Error cargando apuestas futuras"));
+}
+
+// Apostar en futuro
+function apostarFuturo(id, cat, opcion, cuota) {
+  const monto = prompt("Ingresa el monto a apostar");
+  if (!monto) return;
+
+  const payload = {
+    action: "apostarFuturo",
+    usuario,
+    catApuesta: cat,
+    opcion,
+    cuota,
+    monto
+  };
+
+  const form = Object.keys(payload)
+    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
+    .join("&");
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert(d.message);
+    cargarFuturos(); // recarga
+  })
+  .catch(() => alert("Error de conexión"));
+}
+
+  
 function cargarMisApuestas() {
   fetch(`${API_URL}?action=obtenerApuestasUsuario&usuario=${usuario}`)
     .then(r => r.json())
@@ -335,6 +449,7 @@ const payload = {
   });
 }
 
+cargarFuturos();
 cargarMisApuestas();
 render();
 cargarPartidosDesdeSheets();
