@@ -296,39 +296,6 @@ function cargarFuturos() {
     })
     .catch(() => console.error("Error cargando apuestas futuras"));
 }
-
-
-// Apostar en futuro
-function apostarFuturo(id, cat, opcion, cuota) {
-  // agregamos al bet slip
-  selecciones.push({
-    pid: `futuro-${id}`,
-    key: cat,
-    juego: cat,
-    texto: `${opcion} (${cat})`,
-    cuota: Number(cuota),
-    futuroId: id
-  });
-  actualizar();
-}
-
-  const form = Object.keys(payload)
-    .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
-    .join("&");
-
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: form
-  })
-  .then(r => r.json())
-  .then(d => {
-    alert(d.message);
-    cargarFuturos(); // recarga
-  })
-  .catch(() => alert("Error de conexión"));
-}
-
   
 function cargarMisApuestas() {
   fetch(`${API_URL}?action=obtenerApuestasUsuario&usuario=${usuario}`)
@@ -461,26 +428,17 @@ function apostar() {
   const monto = Number(document.getElementById("monto").value);
   if (!selecciones.length) return alert("Selecciona apuestas");
   if (monto <= 0 || monto > saldo) return alert("Saldo insuficiente");
+
   const esFuturo = selecciones[0].tipo === "futuro";
+
   const payload = {
-  action: esFuturo ? "apostarFuturoSlip" : "crearApuesta",
-  usuario,
-  monto,
-  tipo: selecciones.length > 1 ? "Parlay" : "Simple",
-  cuota: cuotaDecimalActual,
-  selecciones: JSON.stringify(selecciones)
-    };
-
-
-const payload = {
-  action: "crearApuesta",
-  usuario,
-  monto,
-  tipo: selecciones.length > 1 ? "Parlay" : "Simple",
-  cuota: cuotaDecimalActual,
-  selecciones: JSON.stringify(selecciones)
-};
-
+    action: esFuturo ? "apostarFuturoSlip" : "crearApuesta",
+    usuario,
+    monto,
+    tipo: selecciones.length > 1 ? "Parlay" : "Simple",
+    cuota: cuotaDecimalActual,
+    selecciones: JSON.stringify(selecciones)
+  };
 
   const form = Object.keys(payload)
     .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
@@ -488,15 +446,11 @@ const payload = {
 
   fetch(API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form
-})
+  })
   .then(r => r.json())
   .then(d => {
-    console.log(d);
-
     if (!d.ok) return alert(d.message);
 
     saldo = d.saldo;
@@ -506,15 +460,12 @@ const payload = {
     alert("Apuesta registrada 🎉");
     location.reload();
   })
-  .catch(err => {
-    console.error(err);
-    alert("Error de conexión");
-  });
+  .catch(() => alert("Error de conexión"));
 }
+
 
 cargarFuturos();
 cargarMisApuestas();
-render();
 cargarPartidosDesdeSheets();
 </script>
 
