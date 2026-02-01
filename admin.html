@@ -74,6 +74,12 @@ button {
   </button>
 </div>
 
+<h3>🏆 Apuestas Futuras</h3>
+  <div id="futurosAdmin"></div>
+
+<button class="liquidar" onclick="liquidarFuturosAdmin()">
+  💰 Liquidar apuestas futuras
+</button>
 
 
 <h3>Partidos de la semana</h3>
@@ -106,6 +112,31 @@ function liquidar() {
   })
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
+
+function marcarGanador(cat, opcion) {
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "marcarGanadorFuturo",
+      catApuesta: cat,
+      opcion
+    })
+  })
+  .then(r => r.json())
+  .then(d => msg.textContent = d.message)
+  .catch(() => msg.textContent = "❌ Error");
+}
+
+function liquidarFuturosAdmin() {
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({ action: "liquidarFuturos" })
+  })
+  .then(r => r.json())
+  .then(d => msg.textContent = d.message)
+  .catch(() => msg.textContent = "❌ Error");
+}
+
 
 function cerrarTodasAdmin(cerrado) {
   fetch(API_URL, {
