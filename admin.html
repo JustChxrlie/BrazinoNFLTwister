@@ -65,6 +65,17 @@ button {
 <h2>Panel Administrador 🧑‍⚖️</h2>
 <p id="msg"></p>
 
+<div class="row">
+  <button class="guardar" onclick="cerrarTodasAdmin(true)">
+    Cerrar todas las apuestas futuras
+  </button>
+  <button class="guardar" onclick="cerrarTodasAdmin(false)">
+    Abrir todas las apuestas futuras
+  </button>
+</div>
+
+
+
 <h3>Partidos de la semana</h3>
 <div id="listaPartidos"></div>
 
@@ -95,6 +106,24 @@ function liquidar() {
   })
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
+
+function cerrarTodasAdmin(cerrado) {
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "cerrarTodasCategorias",
+      cerrado
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.textContent = d.message;
+    // recargar lista de futuros si tienes una función de carga
+    if (typeof cargarFuturos === "function") cargarFuturos();
+  })
+  .catch(() => msg.textContent = "❌ Error de conexión");
+}
+
 
 // ===============================
 // 🏈 Cargar partidos desde Sheets
