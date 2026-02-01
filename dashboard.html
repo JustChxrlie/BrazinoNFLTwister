@@ -132,10 +132,12 @@ button.apostar { margin-top:10px; width:100%; padding:10px; background:#facc15; 
     <h2>Braziño, La casa de apuestas oficial de la ÑFL 🏈</h2>
     <span id="saldo"></span>
   </header>
-  <div id="futurosContainer">
-    <h3>🏆 Apuestas Futuras</h3>
-    <div id="futuros"></div>
-  </div>
+
+ <div id="futurosContainer"> 
+   <h3>🏆 Apuestas Futuras</h3> 
+   <div id="futuros"></div> 
+ </div>
+  
   <div id="partidos"></div>
 </main>
 
@@ -236,56 +238,79 @@ function cargarFuturos() {
     .then(r => r.json())
     .then(d => {
       if (!d.ok) return;
+
       const cont = document.getElementById("futuros");
       cont.innerHTML = "";
 
-      // Agrupar por categoria
+      // Agrupar por categoría
       const categorias = {};
       d.futuros.forEach(f => {
-        if (f.cerrado) return; // solo abiertas
+        if (f.cerrado) return;
         if (!categorias[f.catApuesta]) categorias[f.catApuesta] = [];
         categorias[f.catApuesta].push(f);
       });
 
       Object.keys(categorias).forEach(cat => {
-        // Ordenar por mejor cuota (mayor)
-        categorias[cat].sort((a,b) => b.cuota - a.cuota);
+        // ordenar por mejor cuota
+        categorias[cat].sort((a, b) => b.cuota - a.cuota);
 
         const catDiv = document.createElement("div");
         catDiv.className = "futuroCategoria";
-        catDiv.innerHTML = `<div class="futuroTitulo">🎖️ ${cat}</div>`;
+
+        const titulo = document.createElement("div");
+        titulo.className = "futuroTitulo";
+        titulo.textContent = `🎖️ ${cat}`;
+        titulo.style.cursor = "pointer";
+
+        const opcionesContainer = document.createElement("div");
+        opcionesContainer.style.display = "none"; // 👈 cerrado por defecto
+
+        titulo.onclick = () => {
+          opcionesContainer.style.display =
+            opcionesContainer.style.display === "none" ? "block" : "none";
+        };
 
         categorias[cat].forEach(f => {
           const opcionDiv = document.createElement("div");
           opcionDiv.className = "futuroOpcion";
           opcionDiv.innerHTML = `
-            <span>${f.opcion} • Cuota: ${f.cuota}</span>
-            <button onclick="apostarFuturo('${f.id}','${f.catApuesta}','${f.opcion}','${f.cuota}')">
-              Apostar
-            </button>
+          <span>${f.opcion} • Cuota: ${decimalAMomio(f.cuota)}</span>
+          <button class="btn"
+          onclick="toggleFuturo(
+          '${f.id}',
+          '${f.catApuesta}',
+          '${f.opcion}',
+          ${f.cuota},
+          this
+          )">
+          Agregar
+          </button>
           `;
-          catDiv.appendChild(opcionDiv);
+          opcionesContainer.appendChild(opcionDiv);
         });
 
+        catDiv.appendChild(titulo);
+        catDiv.appendChild(opcionesContainer);
         cont.appendChild(catDiv);
       });
     })
     .catch(() => console.error("Error cargando apuestas futuras"));
 }
 
+
 // Apostar en futuro
 function apostarFuturo(id, cat, opcion, cuota) {
-  const monto = prompt("Ingresa el monto a apostar");
-  if (!monto) return;
-
-  const payload = {
-    action: "apostarFuturo",
-    usuario,
-    catApuesta: cat,
-    opcion,
-    cuota,
-    monto
-  };
+  // agregamos al bet slip
+  selecciones.push({
+    pid: `futuro-${id}`,
+    key: cat,
+    juego: cat,
+    texto: `${opcion} (${cat})`,
+    cuota: Number(cuota),
+    futuroId: id
+  });
+  actualizar();
+}
 
   const form = Object.keys(payload)
     .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(payload[k]))
@@ -358,6 +383,34 @@ function render() {
 }
 
 
+function toggleFuturo(id, categoria, opcion, cuota, el) {
+
+  // ❌ No mezclar partidos con futuros
+  if (selecciones.length && selecciones[0].tipo !== "futuro") {
+    return alert("No puedes combinar partidos con apuestas futuras");
+  }
+
+  const key = `futuro-${id}`;
+
+  const i = selecciones.findIndex(s => s.key === key);
+
+  if (i >= 0) {
+    selecciones.splice(i, 1);
+    el.classList.remove("activo");
+  } else {
+    selecciones.push({
+      tipo: "futuro",
+      key,
+      juego: categoria,
+      texto: `${categoria} – ${opcion}`,
+      cuota
+    });
+    el.classList.add("activo");
+  }
+
+  actualizar();
+}
+  
 function toggle(pid, key, juego, texto, cuota, el) {
   const i = selecciones.findIndex(s => s.pid===pid && s.key===key);
   if (i >= 0) {
@@ -408,6 +461,16 @@ function apostar() {
   const monto = Number(document.getElementById("monto").value);
   if (!selecciones.length) return alert("Selecciona apuestas");
   if (monto <= 0 || monto > saldo) return alert("Saldo insuficiente");
+  const esFuturo = selecciones[0].tipo === "futuro";
+  const payload = {
+  action: esFuturo ? "apostarFuturoSlip" : "crearApuesta",
+  usuario,
+  monto,
+  tipo: selecciones.length > 1 ? "Parlay" : "Simple",
+  cuota: cuotaDecimalActual,
+  selecciones: JSON.stringify(selecciones)
+    };
+
 
 const payload = {
   action: "crearApuesta",
