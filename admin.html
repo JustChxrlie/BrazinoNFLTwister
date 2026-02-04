@@ -77,6 +77,21 @@ button {
 <h3>🏆 Apuestas Futuras</h3>
   <div id="futurosAdmin"></div>
 
+<select id="catFuturo">
+  <option>MVP</option>
+  <option>OPOY</option>
+  <option>DPOY</option>
+  <option>OROY</option>
+  <option>DROY</option>
+  <option>Ganador SB</option>
+  <option>Super Aumeñto (200 Coiñs MAX)</option>
+</select>
+
+<select id="opcionGanadora"></select>
+
+<button onclick="definirGanador()">🏆 Marcar ganador</button>
+
+
 <button class="liquidar" onclick="liquidarFuturosAdmin()">
   💰 Liquidar apuestas futuras
 </button>
@@ -135,6 +150,22 @@ function liquidarFuturosAdmin() {
   .then(r => r.json())
   .then(d => msg.textContent = d.message)
   .catch(() => msg.textContent = "❌ Error");
+}
+
+function definirGanador() {
+  const cat = document.getElementById("catFuturo").value;
+  const id = document.getElementById("opcionGanadora").value;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "setGanadorFuturo",
+      cat,
+      idGanador: id
+    })
+  })
+  .then(r => r.json())
+  .then(d => alert(d.message));
 }
 
 
