@@ -77,6 +77,15 @@ button {
 <h3>🏆 Apuestas Futuras</h3>
   <div id="futurosAdmin"></div>
 
+<select id="catFuturo">
+  <option value="">Selecciona categoría</option>
+</select>
+
+<button class="guardar" onclick="liquidarCategoriaAdmin()">
+  💰 Liquidar categoría
+</button>
+
+
 
 <button class="liquidar" onclick="liquidarFuturosAdmin()">
   💰 Liquidar apuestas futuras
@@ -136,6 +145,25 @@ function liquidarFuturosAdmin() {
   .then(r => r.json())
   .then(d => msg.textContent = d.message)
   .catch(() => msg.textContent = "❌ Error");
+}
+
+function cargarCategoriasFuturos() {
+  fetch(`${API_URL}?action=obtenerFuturos`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
+
+      const select = document.getElementById("catFuturo");
+      select.innerHTML = `<option value="">Selecciona categoría</option>`;
+
+      const cats = [...new Set(d.futuros.map(f => f.catApuesta))];
+      cats.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+    });
 }
 
 function definirGanador() {
@@ -245,6 +273,24 @@ function toggleCerrado(juego, cerradoActual) {
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
 
+function liquidarCategoriaAdmin() {
+  const cat = document.getElementById("catFuturo").value;
+  if (!cat) return alert("Selecciona una categoría");
+
+  if (!confirm(`¿Liquidar TODAS las apuestas futuras de ${cat}?`)) return;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "liquidarCategoriaFuturos",
+      categoria: cat
+    })
+  })
+  .then(r => r.json())
+  .then(d => alert(d.message))
+  .catch(() => alert("❌ Error de conexión"));
+}
+
 // Cerrar/abrir semana completa
 function cerrarSemanaAdmin() {
   const semana = Number(document.getElementById("semanaCerrar").value);
@@ -299,6 +345,7 @@ function guardarResultadoMultiple(i, local, visita, juego) {
 
 // 🚀 Cargar partidos al iniciar
 cargarPartidos();
+cargarCategoriasFuturos();
 </script>
 
 </body>
