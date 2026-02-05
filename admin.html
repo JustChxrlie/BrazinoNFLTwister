@@ -86,12 +86,6 @@ button {
 </button>
 
 
-
-<button class="liquidar" onclick="liquidarFuturosAdmin()">
-  💰 Liquidar apuestas futuras
-</button>
-
-
 <h3>Partidos de la semana</h3>
 <div id="listaPartidos"></div>
 
@@ -131,16 +125,6 @@ function marcarGanador(cat, opcion) {
       catApuesta: cat,
       opcion
     })
-  })
-  .then(r => r.json())
-  .then(d => msg.textContent = d.message)
-  .catch(() => msg.textContent = "❌ Error");
-}
-
-function liquidarFuturosAdmin() {
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({ action: "liquidarFuturos" })
   })
   .then(r => r.json())
   .then(d => msg.textContent = d.message)
