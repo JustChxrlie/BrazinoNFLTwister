@@ -76,8 +76,6 @@ button {
 
 <h3>🏆 Apuestas Futuras</h3>
   
-<div id="futurosAdmin"></div>
-  
 <select id="catFuturo">
   <option value="">Selecciona categoría</option>
 </select>
@@ -314,10 +312,12 @@ function liquidarCategoriaAdmin() {
   .catch(() => alert("❌ Error de conexión"));
 }
 
-// Guardar resultado de partido
+// Guardar resultado de partido (VERSIÓN CORRECTA)
 function guardarResultadoMultiple(i, local, visita, juego) {
-  const pl = Number(document.getElementById(`pv_${i}`).value);
-  const pv = Number(document.getElementById(`pl_${i}`).value);
+
+  // 👉 CORRECTO
+  const pv = Number(document.getElementById(`pl_${i}`).value); // visita
+  const pl = Number(document.getElementById(`pv_${i}`).value); // local
 
   if (isNaN(pl) || isNaN(pv)) {
     msg.textContent = "❌ Ingresa ambos marcadores";
@@ -327,10 +327,10 @@ function guardarResultadoMultiple(i, local, visita, juego) {
   const payload = {
     action: "guardarResultado",
     juego,
-    local,
-    pl,
     visita,
-    pv
+    pv,
+    local,
+    pl
   };
 
   fetch(API_URL, {
@@ -339,8 +339,10 @@ function guardarResultadoMultiple(i, local, visita, juego) {
   })
   .then(r => r.json())
   .then(d => {
-    msg.textContent = d.ok ? `✅ Resultado guardado (${juego})` : "❌ " + d.message;
-    cargarPartidos(); // recarga para actualizar botones
+    msg.textContent = d.ok
+      ? `✅ Resultado guardado (${juego})`
+      : "❌ " + d.message;
+    cargarPartidos();
   })
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
