@@ -75,23 +75,28 @@ button {
 </div>
 
 <h3>🏆 Apuestas Futuras</h3>
-  <div id="futurosAdmin"></div>
-
+  
+<div id="futurosAdmin"></div>
+  
 <select id="catFuturo">
   <option value="">Selecciona categoría</option>
 </select>
 
 <button class="guardar" onclick="liquidarCategoriaAdmin()">
-  💰 Liquidar categoría
+  💰 Liquidar FUTUROS por categoría
 </button>
 
+<button class="liquidar" onclick="liquidarSimplesAdmin()">
+  💰 LIQUIDAR SIMPLES
+</button>
 
-<h3>Partidos de la semana</h3>
+<h3>🏈 Partidos de la semana</h3>
 <div id="listaPartidos"></div>
 
-<button class="liquidar" onclick="liquidar()">
-  💰 LIQUIDAR APUESTAS
+<button class="liquidar" onclick="liquidarParlays()">
+  💰 LIQUIDAR PARLAYS (PARTIDOS CERRADOS)
 </button>
+
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzGMm2P_R2IE6dTD3au5CyuLV-1U41uzRukMWdgynLb6EAjLKmiss3crH7gIxq-eIj3xg/exec";
@@ -103,19 +108,6 @@ if (rol !== "admin") {
 }
 
 const msg = document.getElementById("msg");
-
-// 💰 Liquidar apuestas
-function liquidar() {
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({ action: "liquidar" })
-  })
-  .then(r => r.json())
-  .then(d => {
-    msg.textContent = d.ok ? "💰 Apuestas liquidadas" : "❌ " + d.message;
-  })
-  .catch(() => msg.textContent = "❌ Error de conexión");
-}
 
 function marcarGanador(cat, opcion) {
   fetch(API_URL, {
@@ -150,20 +142,33 @@ function cargarCategoriasFuturos() {
     });
 }
 
-function definirGanador() {
-  const cat = document.getElementById("catFuturo").value;
-  const id = document.getElementById("opcionGanadora").value;
+function cargarFuturos() {
+  fetch(`${API_URL}?action=obtenerFuturos`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
 
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({
-      action: "setGanadorFuturo",
-      cat,
-      idGanador: id
-    })
-  })
-  .then(r => r.json())
-  .then(d => alert(d.message));
+      const cont = document.getElementById("futurosAdmin");
+      cont.innerHTML = "";
+
+      d.futuros.forEach(f => {
+        const div = document.createElement("div");
+        div.className = "partido";
+
+        div.innerHTML = `
+          <strong>${f.catApuesta}</strong>
+          <p>${f.opcion}</p>
+
+          <button class="guardar"
+            onclick="marcarGanador('${f.catApuesta}', '${f.opcion}')"
+            ${f.cerrado ? "disabled" : ""}>
+            Marcar ganador
+          </button>
+        `;
+
+        cont.appendChild(div);
+      });
+    });
 }
 
 
@@ -257,6 +262,40 @@ function toggleCerrado(juego, cerradoActual) {
   .catch(() => msg.textContent = "❌ Error de conexión");
 }
 
+function liquidarParlays() {
+  if (!confirm("¿Liquidar TODOS los PARLAYS de partidos CERRADOS?")) return;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "liquidarApuestasPartidos"
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert(d.message || "Parlays liquidados");
+  })
+  .catch(() => alert("❌ Error de conexión"));
+}
+
+function liquidarSimplesAdmin() {
+  if (!confirm("¿Liquidar TODAS las apuestas SIMPLES de partidos cerrados?")) return;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      action: "liquidarSimples"
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert(d.ok ? "✅ Simples liquidados correctamente" : "❌ " + d.message);
+  })
+  .catch(() => alert("❌ Error de conexión"));
+}
+
+
+
 function liquidarCategoriaAdmin() {
   const cat = document.getElementById("catFuturo").value;
   if (!cat) return alert("Selecciona una categoría");
@@ -273,27 +312,6 @@ function liquidarCategoriaAdmin() {
   .then(r => r.json())
   .then(d => alert(d.message))
   .catch(() => alert("❌ Error de conexión"));
-}
-
-// Cerrar/abrir semana completa
-function cerrarSemanaAdmin() {
-  const semana = Number(document.getElementById("semanaCerrar").value);
-  if (!semana) return alert("Ingresa número de semana");
-
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({
-      action: "cerrarSemana",
-      semana,
-      cerrado: true
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
-    msg.textContent = d.message;
-    cargarPartidos();
-  })
-  .catch(() => msg.textContent = "❌ Error de conexión");
 }
 
 // Guardar resultado de partido
@@ -330,6 +348,7 @@ function guardarResultadoMultiple(i, local, visita, juego) {
 // 🚀 Cargar partidos al iniciar
 cargarPartidos();
 cargarCategoriasFuturos();
+cargarFuturos();
 </script>
 
 </body>
